@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年度回顾 - 40个问题反思你的2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f5f0;
+            padding: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="none" stroke="%23e6e0d7" stroke-width="0.5" d="M0,0 L100,100 M100,0 L0,100"/></svg>');
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 6px solid #8b7355;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            color: #5d4037;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #795548;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background-color: #fff9f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #d7ccc8;
+        }
+        
+        .instructions h2 {
+            color: #6d4c41;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .questions-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .answers-section {
+            flex: 2;
+            min-width: 300px;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            color: #5d4037;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #d7ccc8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #8d6e63;
+        }
+        
+        .questions-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .question-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #faf5ef;
+            border-radius: 8px;
+            border-left: 4px solid #bcaaa4;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .question-item:hover {
+            background-color: #f3e9de;
+            transform: translateY(-2px);
+        }
+        
+        .question-item.active {
+            background-color: #efebe9;
+            border-left-color: #8b7355;
+        }
+        
+        .question-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background-color: #8b7355;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .answer-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .user-info {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .user-info input {
+            padding: 12px 15px;
+            border: 1px solid #d7ccc8;
+            border-radius: 6px;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .current-question {
+            background-color: #f5f0eb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .current-question h3 {
+            font-size: 1.3rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #d7ccc8;
+            border-radius: 6px;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.1rem;
+            min-height: 120px;
+            resize: vertical;
+            background-color: #fffefc;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background-color: #8b7355;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #6b5842;
+        }
+        
+        button:disabled {
+            background-color: #bcaaa4;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #a1887f;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #8d6e63;
+        }
+        
+        .answers-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .answer-entry {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #faf5ef;
+            border-radius: 8px;
+            border-left: 4px solid #bcaaa4;
+        }
+        
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #5d4037;
+        }
+        
+        .answer-text {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.1rem;
+        }
+        
+        .preview-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fffefc;
+            border-radius: 8px;
+            border: 1px dashed #8b7355;
+        }
+        
+        .preview-title {
+            font-size: 1.5rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .preview-parts {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .preview-part {
+            background-color: #fffefc;
+            border: 1px solid #d7ccc8;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .part-header {
+            background-color: #8b7355;
+            color: white;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .part-content {
+            line-height: 1.5;
+            font-size: 0.9rem;
+            color: #3e2723;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-line;
+        }
+        
+        .part-footer {
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #d7ccc8;
+        }
+        
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .user-tag {
+            padding: 8px 15px;
+            background-color: #efebe9;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-tag i {
+            color: #8b7355;
+        }
+        
+        .handwritten-note {
+            font-family: 'Ma Shan Zheng', cursive;
+            color: #5d4037;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            background-color: #f5f0eb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #d7ccc8;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #8b7355;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .data-controls {
+            background-color: #fff9f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #d7ccc8;
+        }
+        
+        .data-controls h3 {
+            color: #6d4c41;
+            margin-bottom: 10px;
+        }
+        
+        .data-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-success {
+            background-color: #4caf50;
+        }
+        
+        .btn-success:hover {
+            background-color: #388e3c;
+        }
+        
+        .btn-info {
+            background-color: #2196f3;
+        }
+        
+        .btn-info:hover {
+            background-color: #1976d2;
+        }
+        
+        .btn-warning {
+            background-color: #ff9800;
+        }
+        
+        .btn-warning:hover {
+            background-color: #f57c00;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #795548;
+            font-size: 0.9rem;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            max-width: 300px;
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        .notification.warning {
+            background-color: #ff9800;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #8b7355;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #795548;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .preview-parts {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-buttons {
+                flex-direction: column;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 通知区域 -->
+    <div id="notification" class="notification"></div>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book-open"></i> 年度回顾反思</h1>
+            <p class="subtitle">40个问题帮你回顾过去一年的成长与经历</p>
+            <p>当2025年的日历即将翻过最后一页，那些欢笑与遗憾、坚持与改变，都值得被郑重收藏。</p>
+            <p>这40个问题，是写给时光的探针，帮你打捞散落的碎片，将一整年的故事，清晰地写进回忆里。</p>
+        </header>
+        
+        <div class="instructions">
+            <h2><i class="fas fa-info-circle"></i> 使用说明</h2>
+            <ol>
+                <li>填写你的姓名或昵称，开始回答问题</li>
+                <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
+                <li>在每个问题下方的文本框中写下你的答案</li>
+                <li>完成所有问题后，点击"生成四张图片"按钮保存你的年度回顾卡片</li>
+                <li><strong>重要</strong>：使用"导出数据"功能备份你的答案，避免清除浏览器数据后丢失</li>
+            </ol>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">总用户数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalAnswers">0</div>
+                <div class="stat-label">总回答数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayAnswers">0</div>
+                <div class="stat-label">今日回答</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completionRate">0%</div>
+                <div class="stat-label">完成率</div>
+            </div>
+        </div>
+        
+        <div class="app-container">
+            <div class="questions-section">
+                <h2 class="section-title"><i class="fas fa-question-circle"></i> 40个年度问题</h2>
+                <div class="questions-list" id="questionsList">
+                    <!-- 问题列表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <div class="answers-section">
+                <h2 class="section-title"><i class="fas fa-edit"></i> 记录你的答案</h2>
+                
+                <div class="answer-form">
+                    <div class="user-info">
+                        <input type="text" id="userName" placeholder="请输入你的姓名或昵称" value="匿名用户">
+                        <button id="startBtn">开始回答</button>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div>完成进度: <span id="progressText">0/40</span></div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="current-question">
+                        <h3 id="currentQuestionText">请从左侧选择一个问题开始回答</h3>
+                        <p class="handwritten-note">你的答案将以手写字体显示在生成的图片中</p>
+                    </div>
+                    
+                    <div>
+                        <textarea id="answerInput" placeholder="在这里写下你的回答..."></textarea>
+                        <div class="navigation-buttons">
+                            <button id="prevBtn" disabled><i class="fas fa-arrow-left"></i> 上一题</button>
+                            <button id="saveBtn">保存答案</button>
+                            <button id="nextBtn" disabled>下一题 <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button id="generateImageBtn" class="btn-secondary" disabled><i class="fas fa-image"></i> 生成四张年度回顾图片</button>
+                        <button id="viewAllAnswersBtn"><i class="fas fa-users"></i> 查看所有用户答案</button>
+                    </div>
+                    
+                    <!-- 数据控制区域 -->
+                    <div class="data-controls">
+                        <h3><i class="fas fa-database"></i> 数据管理</h3>
+                        <p style="margin-bottom: 10px; font-size: 0.9rem;">所有答案保存在浏览器本地存储中。请定期导出备份：</p>
+                        <div class="data-buttons">
+                            <button id="exportDataBtn" class="btn-small btn-success"><i class="fas fa-file-export"></i> 导出所有数据</button>
+                            <button id="importDataBtn" class="btn-small btn-info"><i class="fas fa-file-import"></i> 导入数据</button>
+                            <button id="backupUserBtn" class="btn-small"><i class="fas fa-user-check"></i> 备份当前用户</button>
+                            <button id="clearLocalBtn" class="btn-small btn-warning"><i class="fas fa-trash"></i> 清除本地数据</button>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: #795548;">
+                            <i class="fas fa-info-circle"></i> 数据存储状态: <span id="storageStatus">正常</span>
+                            <span id="storageSize" style="margin-left: 10px;">大小: 计算中...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="answers-list" id="answersList">
+                    <h3 class="section-title"><i class="fas fa-comments"></i> 所有用户答案</h3>
+                    <!-- 用户答案将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-container" id="previewContainer" style="display:none;">
+            <div class="preview-title">
+                <span><i class="fas fa-file-image"></i> 年度回顾卡片预览（共4部分）</span>
+                <button id="downloadAllBtn"><i class="fas fa-download"></i> 下载全部4张图片</button>
+            </div>
+            <div class="preview-parts" id="previewParts">
+                <!-- 4个部分将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 年度回顾反思 | 设计灵感来自年度反思问题列表 | 数据存储在浏览器本地</p>
+            <p><strong>重要提示</strong>：请在关闭页面前导出数据备份，避免清除浏览器数据后丢失所有答案</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">
+                <i class="fas fa-save"></i> 数据自动保存 | <i class="fas fa-file-export"></i> 支持导出备份 | <i class="fas fa-image"></i> 可生成纪念图片
+            </p>
+        </footer>
+    </div>
+
+    <!-- html2canvas 库用于将HTML转换为图片 -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <script>
+        // 40个年度问题
+        const questions = [
+            "你今年做了哪些之前从未做过的事?",
+            "你坚持年初时和自己许下的约定了吗?",
+            "你身边有人生孩子了吗?",
+            "你身边有人去世了吗?",
+            "你去了哪些城市/州/国家?",
+            "明年你想要拥有哪些今年没有的东西?",
+            "今年的哪个或哪些日子会铭刻在你的记忆中，为什么?",
+            "你今年最大的成就是什么?",
+            "你今年最大的失败是什么?",
+            "你今年还遇到过哪些困难?",
+            "你今年是否生过病或受过伤?",
+            "你今年买过的最好的东西是什么?",
+            "谁的行为值得去表扬?",
+            "谁的行为令你感到震惊?",
+            "你大部分的钱都花到哪里去了?",
+            "有什么事让你感到超级、超级、超级兴奋?",
+            "哪首歌会永远让你想起这一年?",
+            "与去年的这个时候相比，你是: 感到更快乐or更悲伤了? 更瘦or更胖了?更富or更穷了?",
+            "你希望自己能做得更多的是什么?",
+            "你希望自己能做得更少的是什么?",
+            "你生日那天做了什么?",
+            "还有什么未发生的事，如果发生了，会让你这一年变得无比满足?",
+            "你会如何描述你今年的个人时尚风格?",
+            "是什么让你保持理智?",
+            "你最欣赏哪个名人/公众人物?",
+            "哪个政治问题最令你有感而发?",
+            "你想念哪些人?",
+            "在你新认识的人之中，谁是最好的?",
+            "今年你学到了什么宝贵的人生经验?",
+            "能够总结你这一年的一句话是什么?",
+            "你是如何度过节假日的?",
+            "你今年坠入爱河了吗?",
+            "你是否有讨厌某一个你去年此时不觉得讨厌的人呢?",
+            "你最喜欢的电视节目是什么?",
+            "你读过最好的一本书是什么?",
+            "你今年发现的最好听的一首歌是什么?",
+            "你今年看过最喜欢的一部电影是什么?",
+            "你今年吃过最好吃的一顿饭是什么?",
+            "有什么是你想要而且得到了的?",
+            "有什么是你想要却没有得到的?"
+        ];
+
+        // 当前用户数据
+        let currentUser = {
+            name: "匿名用户",
+            answers: new Array(40).fill(""),
+            currentQuestionIndex: 0,
+            lastSaved: new Date().toISOString()
+        };
+
+        // 所有用户数据
+        let allUsers = JSON.parse(localStorage.getItem('annualReviewUsers')) || [];
+
+        // DOM元素
+        const questionsList = document.getElementById('questionsList');
+        const currentQuestionText = document.getElementById('currentQuestionText');
+        const answerInput = document.getElementById('answerInput');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const startBtn = document.getElementById('startBtn');
+        const userNameInput = document.getElementById('userName');
+        const generateImageBtn = document.getElementById('generateImageBtn');
+        const viewAllAnswersBtn = document.getElementById('viewAllAnswersBtn');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewParts = document.getElementById('previewParts');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const answersList = document.getElementById('answersList');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const notification = document.getElementById('notification');
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const importDataBtn = document.getElementById('importDataBtn');
+        const backupUserBtn = document.getElementById('backupUserBtn');
+        const clearLocalBtn = document.getElementById('clearLocalBtn');
+        const storageStatus = document.getElementById('storageStatus');
+        const storageSize = document.getElementById('storageSize');
+        const totalUsers = document.getElementById('totalUsers');
+        const totalAnswers = document.getElementById('totalAnswers');
+        const todayAnswers = document.getElementById('todayAnswers');
+        const completionRate = document.getElementById('completionRate');
+
+        // 显示通知
+        function showNotification(message, type = 'success', duration = 3000) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, duration);
+        }
+
+        // 更新存储状态显示
+        function updateStorageStatus() {
+            try {
+                // 计算所有用户数据大小
+                const allData = JSON.stringify({
+                    allUsers: allUsers,
+                    currentUser: currentUser,
+                    timestamp: new Date().toISOString()
+                });
+                
+                const sizeKB = (allData.length / 1024).toFixed(2);
+                storageSize.textContent = `大小: ${sizeKB} KB`;
+                
+                // 检查存储空间
+                let storageAvailable = true;
+                try {
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                } catch (e) {
+                    storageAvailable = false;
+                }
+                
+                storageStatus.textContent = storageAvailable ? '正常' : '已满或受限';
+                storageStatus.style.color = storageAvailable ? '#4caf50' : '#f44336';
+                
+                return storageAvailable;
+            } catch (error) {
+                storageStatus.textContent = '错误';
+                storageStatus.style.color = '#f44336';
+                return false;
+            }
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            // 总用户数
+            totalUsers.textContent = allUsers.length;
+            
+            // 总回答数
+            let totalAnswerCount = 0;
+            allUsers.forEach(user => {
+                totalAnswerCount += user.answers.filter(answer => answer && answer.trim() !== '').length;
+            });
+            totalAnswers.textContent = totalAnswerCount;
+            
+            // 今日回答数
+            const today = new Date().toDateString();
+            let todayAnswerCount = 0;
+            allUsers.forEach(user => {
+                if (user.lastSaved && new Date(user.lastSaved).toDateString() === today) {
+                    todayAnswerCount += user.answers.filter(answer => answer && answer.trim() !== '').length;
+                }
+            });
+            todayAnswers.textContent = todayAnswerCount;
+            
+            // 平均完成率
+            let totalCompletion = 0;
+            if (allUsers.length > 0) {
+                allUsers.forEach(user => {
+                    const answeredCount = user.answers.filter(answer => answer && answer.trim() !== '').length;
+                    totalCompletion += (answeredCount / questions.length) * 100;
+                });
+                const avgCompletion = Math.round(totalCompletion / allUsers.length);
+                completionRate.textContent = `${avgCompletion}%`;
+            } else {
+                completionRate.textContent = "0%";
+            }
+        }
+
+        // 初始化问题列表
+        function initQuestionsList() {
+            questionsList.innerHTML = '';
+            questions.forEach((question, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'question-item';
+                questionItem.innerHTML = `
+                    <span class="question-number">${index + 1}</span>
+                    <span class="question-text">${question}</span>
+                `;
+                
+                questionItem.addEventListener('click', () => {
+                    currentUser.currentQuestionIndex = index;
+                    updateQuestionDisplay();
+                    highlightCurrentQuestion();
+                });
+                
+                questionsList.appendChild(questionItem);
+            });
+            
+            highlightCurrentQuestion();
+        }
+
+        // 高亮当前问题
+        function highlightCurrentQuestion() {
+            const questionItems = document.querySelectorAll('.question-item');
+            questionItems.forEach((item, index) => {
+                if (index === currentUser.currentQuestionIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // 更新问题显示
+        function updateQuestionDisplay() {
+            const questionIndex = currentUser.currentQuestionIndex;
+            currentQuestionText.textContent = `${questionIndex + 1}. ${questions[questionIndex]}`;
+            answerInput.value = currentUser.answers[questionIndex] || "";
+            
+            prevBtn.disabled = questionIndex === 0;
+            nextBtn.disabled = questionIndex === questions.length - 1;
+            
+            const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
+            const allAnswered = answeredCount === questions.length;
+            generateImageBtn.disabled = !allAnswered;
+            
+            updateProgress(answeredCount);
+            highlightCurrentQuestion();
+            saveUserProgress();
+        }
+
+        // 更新进度
+        function updateProgress(answeredCount) {
+            const percentage = (answeredCount / questions.length) * 100;
+            progressText.textContent = `${answeredCount}/${questions.length}`;
+            progressFill.style.width = `${percentage}%`;
+        }
+
+        // 保存用户答案
+        function saveAnswer() {
+            const answer = answerInput.value.trim();
+            currentUser.answers[currentUser.currentQuestionIndex] = answer;
+            currentUser.lastSaved = new Date().toISOString();
+            
+            saveUserProgress();
+            
+            const originalText = saveBtn.textContent;
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> 已保存';
+            saveBtn.style.backgroundColor = '#689f38';
+            
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.innerHTML = '保存答案';
+                saveBtn.style.backgroundColor = '';
+            }, 1000);
+            
+            const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
+            updateProgress(answeredCount);
+        }
+
+        // 保存用户进度到本地存储
+        function saveUserProgress() {
+            try {
+                localStorage.setItem('currentUserProgress', JSON.stringify(currentUser));
+                
+                // 更新所有用户列表
+                const existingUserIndex = allUsers.findIndex(user => user.name === currentUser.name);
+                if (existingUserIndex !== -1) {
+                    allUsers[existingUserIndex] = { ...currentUser };
+                } else {
+                    allUsers.push({ ...currentUser });
+                }
+                
+                localStorage.setItem('annualReviewUsers', JSON.stringify(allUsers));
+                
+                // 更新显示
+                updateStorageStatus();
+                updateStatistics();
+                
+                return true;
+            } catch (error) {
+                console.error('保存失败:', error);
+                showNotification('保存失败，存储空间可能已满', 'error');
+                return false;
+            }
+        }
+
+        // 加载用户进度
+        function loadUserProgress() {
+            const savedProgress = localStorage.getItem('currentUserProgress');
+            if (savedProgress) {
+                try {
+                    currentUser = JSON.parse(savedProgress);
+                    updateQuestionDisplay();
+                } catch (e) {
+                    console.error('解析保存的数据失败:', e);
+                }
+            }
+            
+            // 加载所有用户
+            try {
+                const savedUsers = localStorage.getItem('annualReviewUsers');
+                if (savedUsers) {
+                    allUsers = JSON.parse(savedUsers);
+                }
+            } catch (e) {
+                console.error('加载所有用户数据失败:', e);
+            }
+            
+            updateStorageStatus();
+            updateStatistics();
+        }
+
+        // 开始回答
+        function startAnswering() {
+            const name = userNameInput.value.trim() || "匿名用户";
+            currentUser.name = name;
+            
+            const existingUserIndex = allUsers.findIndex(user => user.name === name);
+            
+            if (existingUserIndex !== -1) {
+                if (confirm(`发现名为"${name}"的已有回答，是否加载之前的回答？点击"取消"将创建新的回答。`)) {
+                    currentUser.answers = allUsers[existingUserIndex].answers;
+                }
+            }
+            
+            updateQuestionDisplay();
+            startBtn.disabled = true;
+            userNameInput.disabled = true;
+        }
+
+        // 导出所有数据
+        function exportAllData() {
+            const exportData = {
+                allUsers: allUsers,
+                currentUser: currentUser,
+                exportDate: new Date().toISOString(),
+                version: '1.0',
+                questions: questions
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `年度回顾数据备份_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('数据导出成功', 'success');
+        }
+
+        // 导入数据
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        if (confirm('确定要导入数据吗？这将覆盖当前所有数据。')) {
+                            // 验证数据格式
+                            if (data.allUsers && Array.isArray(data.allUsers)) {
+                                allUsers = data.allUsers;
+                                localStorage.setItem('annualReviewUsers', JSON.stringify(allUsers));
+                            }
+                            
+                            if (data.currentUser) {
+                                currentUser = data.currentUser;
+                                localStorage.setItem('currentUserProgress', JSON.stringify(currentUser));
+                                updateQuestionDisplay();
+                            }
+                            
+                            if (data.currentUser) {
+                                userNameInput.value = currentUser.name;
+                                startBtn.disabled = true;
+                                userNameInput.disabled = true;
+                            }
+                            
+                            displayAllAnswers();
+                            updateStorageStatus();
+                            updateStatistics();
+                            showNotification('数据导入成功', 'success');
+                        }
+                    } catch (error) {
+                        showNotification('文件格式错误，无法导入', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        // 备份当前用户
+        function backupCurrentUser() {
+            const userData = {
+                user: currentUser,
+                backupDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(userData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${currentUser.name}_年度回顾备份_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification(`${currentUser.name}的数据备份成功`, 'success');
+        }
+
+        // 清除本地数据
+        function clearLocalData() {
+            if (confirm('确定要清除所有本地数据吗？建议先导出备份。')) {
+                localStorage.removeItem('currentUserProgress');
+                localStorage.removeItem('annualReviewUsers');
+                currentUser = {
+                    name: userNameInput.value.trim() || "匿名用户",
+                    answers: new Array(40).fill(""),
+                    currentQuestionIndex: 0,
+                    lastSaved: new Date().toISOString()
+                };
+                allUsers = [];
+                updateQuestionDisplay();
+                displayAllAnswers();
+                startBtn.disabled = false;
+                userNameInput.disabled = false;
+                updateStorageStatus();
+                updateStatistics();
+                showNotification('本地数据已清除', 'warning');
+            }
+        }
+
+        // 创建图片生成器
+        function createImageGenerator(partIndex, partTitle, questionsSubset, answersSubset) {
+            return () => {
+                const totalChars = answersSubset.reduce((total, answer) => total + (answer || "").length, 0);
+                
+                let baseFontSize;
+                if (totalChars > 10000) baseFontSize = 14;
+                else if (totalChars > 8000) baseFontSize = 16;
+                else if (totalChars > 6000) baseFontSize = 18;
+                else if (totalChars > 4000) baseFontSize = 20;
+                else if (totalChars > 3000) baseFontSize = 22;
+                else if (totalChars > 2000) baseFontSize = 24;
+                else if (totalChars > 1000) baseFontSize = 26;
+                else baseFontSize = 28;
+                
+                const tempContainer = document.createElement('div');
+                tempContainer.style.width = '1080px';
+                tempContainer.style.height = '1920px';
+                tempContainer.style.padding = '30px 40px';
+                tempContainer.style.backgroundColor = '#fffefc';
+                tempContainer.style.color = '#3e2723';
+                tempContainer.style.lineHeight = '1.4';
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.top = '0';
+                tempContainer.style.overflow = 'hidden';
+                tempContainer.style.boxSizing = 'border-box';
+                document.body.appendChild(tempContainer);
+                
+                let contentHTML = `
+                    <div style="text-align: center; margin-bottom: 15px; font-family: 'Noto Sans SC', sans-serif;">
+                        <div style="font-size: ${baseFontSize + 6}px; color: #5d4037; margin-bottom: 5px; font-weight: bold;">${currentUser.name}的年度回顾</div>
+                        <div style="font-size: ${baseFontSize + 4}px; color: #795548; margin-bottom: 3px;">${partTitle}</div>
+                        <div style="font-size: ${baseFontSize}px; color: #8d6e63;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
+                        <hr style="border: none; border-top: 1px solid #8b7355; margin: 8px 0 12px;">
+                    </div>
+                    <div style="height: calc(1920px - 120px); overflow: hidden; padding-right: 5px;">
+                `;
+                
+                questionsSubset.forEach((question, index) => {
+                    const questionNumber = partIndex * 10 + index + 1;
+                    const answer = answersSubset[index] || "（未回答）";
+                    
+                    let displayAnswer = answer;
+                    if (displayAnswer.length > 1000) {
+                        displayAnswer = displayAnswer.substring(0, 1000) + "...（内容过长，已截断）";
+                    }
+                    
+                    contentHTML += `
+                        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+                            <div style="font-size: ${baseFontSize}px; color: #5d4037; margin-bottom: 4px; display: flex; align-items: flex-start; font-family: 'Noto Sans SC', sans-serif;">
+                                <span style="background-color: #8b7355; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: ${baseFontSize - 4}px; flex-shrink: 0;">${questionNumber}</span>
+                                <span style="font-weight: bold; line-height: 1.3;">${question}</span>
+                            </div>
+                            <div style="font-size: ${baseFontSize - 2}px; color: #3e2723; margin-left: 42px; margin-right: 5px; font-family: 'Ma Shan Zheng', cursive; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
+                                ${displayAnswer}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentHTML += `
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; color: #795548; font-size: ${baseFontSize - 6}px; border-top: 1px solid #d7ccc8; padding-top: 10px; font-family: 'Noto Sans SC', sans-serif;">
+                        <div>© ${new Date().getFullYear()} 年度回顾反思</div>
+                        <div>生成时间: ${new Date().toLocaleDateString('zh-CN')}</div>
+                    </div>
+                `;
+                
+                tempContainer.innerHTML = contentHTML;
+                
+                html2canvas(tempContainer, {
+                    scale: 2,
+                    backgroundColor: '#fffefc',
+                    useCORS: true,
+                    logging: false,
+                    width: 1080,
+                    height: 1920,
+                    windowWidth: 1080,
+                    windowHeight: 1920
+                }).then(canvas => {
+                    if (canvas.width !== 1080 || canvas.height !== 1920) {
+                        const finalCanvas = document.createElement('canvas');
+                        finalCanvas.width = 1080;
+                        finalCanvas.height = 1920;
+                        const ctx = finalCanvas.getContext('2d');
+                        ctx.drawImage(canvas, 0, 0, 1080, 1920);
+                        
+                        const link = document.createElement('a');
+                        link.download = `${currentUser.name}_年度回顾_第${partIndex + 1}部分.png`;
+                        link.href = finalCanvas.toDataURL('image/png');
+                        link.click();
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = `${currentUser.name}_年度回顾_第${partIndex + 1}部分.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    }
+                    
+                    document.body.removeChild(tempContainer);
+                }).catch(error => {
+                    console.error('生成图片时出错:', error);
+                    alert('生成图片时出错，请重试。如果答案过长，请考虑缩短答案。');
+                    document.body.removeChild(tempContainer);
+                });
+            };
+        }
+
+        // 生成图片
+        function generateImages() {
+            const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 1000);
+            if (hasLongAnswer) {
+                if (!confirm('检测到部分答案较长，为了确保所有内容都能放入图片中，系统可能会自动调整字体大小。是否继续生成图片？')) {
+                    return;
+                }
+            }
+            
+            previewContainer.style.display = 'block';
+            previewParts.innerHTML = '';
+            
+            const partTitles = [
+                "第一部分: 成长与经历 (第1-10题)",
+                "第二部分: 反思与感悟 (第11-20题)", 
+                "第三部分: 个人与社交 (第21-30题)",
+                "第四部分: 文化与生活 (第31-40题)"
+            ];
+            
+            for (let partIndex = 0; partIndex < 4; partIndex++) {
+                const startIdx = partIndex * 10;
+                const endIdx = startIdx + 10;
+                const partQuestions = questions.slice(startIdx, endIdx);
+                const partAnswers = currentUser.answers.slice(startIdx, endIdx);
+                
+                const partHasLongAnswer = partAnswers.some(answer => answer && answer.length > 1000);
+                
+                const partElement = document.createElement('div');
+                partElement.className = 'preview-part';
+                partElement.id = `previewPart${partIndex}`;
+                
+                let previewHTML = '';
+                partQuestions.forEach((question, index) => {
+                    const questionNumber = startIdx + index + 1;
+                    const answer = partAnswers[index] || "（未回答）";
+                    const answerPreview = answer.length > 60 ? answer.substring(0, 60) + '...' : answer;
+                    previewHTML += `<div style="margin-bottom: 10px;">
+                        <div style="font-weight: bold; color: #5d4037; font-family: 'Noto Sans SC', sans-serif;">${questionNumber}. ${question}</div>
+                        <div style="padding-left: 20px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive;">${answerPreview}</div>
+                    </div>`;
+                });
+                
+                partElement.innerHTML = `
+                    <div class="part-header">${partTitles[partIndex]}${partHasLongAnswer ? ' (含长答案)' : ''}</div>
+                    <div class="part-content">${previewHTML}</div>
+                    <div class="part-footer">
+                        <button class="download-part-btn" data-part="${partIndex}">
+                            <i class="fas fa-download"></i> 下载第${partIndex + 1}部分
+                        </button>
+                    </div>
+                `;
+                
+                previewParts.appendChild(partElement);
+                
+                const downloadBtn = partElement.querySelector('.download-part-btn');
+                downloadBtn.addEventListener('click', createImageGenerator(
+                    partIndex, 
+                    partTitles[partIndex], 
+                    partQuestions, 
+                    partAnswers
+                ));
+            }
+            
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 下载所有图片
+        function downloadAllImages() {
+            alert('即将开始下载4张精确尺寸图片，每张图片为1080×1920像素PNG格式，包含完整的10个问题和答案。系统会自动调整布局以确保所有内容都能放入图片中。请根据浏览器提示允许下载。');
+            
+            const downloadQueue = [];
+            const partTitles = [
+                "第一部分: 成长与经历 (第1-10题)",
+                "第二部分: 反思与感悟 (第11-20题)", 
+                "第三部分: 个人与社交 (第21-30题)",
+                "第四部分: 文化与生活 (第31-40题)"
+            ];
+            
+            for (let partIndex = 0; partIndex < 4; partIndex++) {
+                const startIdx = partIndex * 10;
+                const endIdx = startIdx + 10;
+                const partQuestions = questions.slice(startIdx, endIdx);
+                const partAnswers = currentUser.answers.slice(startIdx, endIdx);
+                
+                downloadQueue.push({
+                    generator: createImageGenerator(partIndex, partTitles[partIndex], partQuestions, partAnswers),
+                    delay: partIndex * 2500
+                });
+            }
+            
+            downloadQueue.forEach((item, index) => {
+                setTimeout(() => {
+                    item.generator();
+                }, item.delay);
+            });
+        }
+
+        // 显示所有用户答案
+        function displayAllAnswers() {
+            answersList.innerHTML = '<h3 class="section-title"><i class="fas fa-comments"></i> 所有用户答案</h3>';
+            
+            if (allUsers.length === 0) {
+                answersList.innerHTML += '<p style="text-align: center; padding: 20px; color: #795548;">还没有用户保存答案，请完成回答并生成图片。</p>';
+                return;
+            }
+            
+            const userList = document.createElement('div');
+            userList.className = 'user-list';
+            
+            allUsers.forEach(user => {
+                const userTag = document.createElement('div');
+                userTag.className = 'user-tag';
+                userTag.innerHTML = `<i class="fas fa-user"></i> ${user.name}`;
+                userList.appendChild(userTag);
+            });
+            
+            answersList.appendChild(userList);
+            
+            allUsers.forEach(user => {
+                const answerEntry = document.createElement('div');
+                answerEntry.className = 'answer-entry';
+                
+                const answerCount = user.answers.filter(answer => answer.trim() !== "").length;
+                
+                answerEntry.innerHTML = `
+                    <div class="answer-header">
+                        <span><i class="fas fa-user"></i> ${user.name}</span>
+                        <span>已回答: ${answerCount}/40</span>
+                    </div>
+                    <div class="answer-text">
+                        <strong>年度总结:</strong> ${user.answers[29] ? (user.answers[29].length > 100 ? user.answers[29].substring(0, 100) + '...' : user.answers[29]) : '（未回答）'}
+                    </div>
+                `;
+                
+                answersList.appendChild(answerEntry);
+            });
+        }
+
+        // 查看所有用户答案
+        function viewAllAnswers() {
+            allUsers = JSON.parse(localStorage.getItem('annualReviewUsers')) || [];
+            displayAllAnswers();
+            updateStatistics();
+            answersList.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            prevBtn.addEventListener('click', () => {
+                if (currentUser.currentQuestionIndex > 0) {
+                    currentUser.currentQuestionIndex--;
+                    updateQuestionDisplay();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentUser.currentQuestionIndex < questions.length - 1) {
+                    currentUser.currentQuestionIndex++;
+                    updateQuestionDisplay();
+                }
+            });
+
+            saveBtn.addEventListener('click', saveAnswer);
+
+            startBtn.addEventListener('click', startAnswering);
+
+            userNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    startAnswering();
+                }
+            });
+
+            generateImageBtn.addEventListener('click', generateImages);
+
+            viewAllAnswersBtn.addEventListener('click', viewAllAnswers);
+
+            downloadAllBtn.addEventListener('click', downloadAllImages);
+            
+            answerInput.addEventListener('blur', saveAnswer);
+            
+            answerInput.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    saveAnswer();
+                }
+            });
+            
+            // 数据管理按钮
+            exportDataBtn.addEventListener('click', exportAllData);
+            importDataBtn.addEventListener('click', importData);
+            backupUserBtn.addEventListener('click', backupCurrentUser);
+            clearLocalBtn.addEventListener('click', clearLocalData);
+            
+            // 定期保存
+            setInterval(() => {
+                if (currentUser.name !== "匿名用户") {
+                    saveUserProgress();
+                }
+            }, 30000); // 每30秒自动保存一次
+            
+            // 页面关闭前提醒保存
+            window.addEventListener('beforeunload', (e) => {
+                if (currentUser.name !== "匿名用户" && currentUser.answers.some(a => a.trim() !== "")) {
+                    e.preventDefault();
+                    e.returnValue = '你有未保存的答案，确定要离开吗？';
+                }
+            });
+        }
+
+        // 初始化应用
+        function initApp() {
+            initQuestionsList();
+            initEventListeners();
+            loadUserProgress();
+            displayAllAnswers();
+            
+            if (localStorage.getItem('currentUserProgress')) {
+                startBtn.disabled = true;
+                userNameInput.disabled = true;
+            }
+            
+            // 初始化统计信息
+            updateStatistics();
+            
+            // 显示欢迎信息
+            setTimeout(() => {
+                if (allUsers.length > 0) {
+                    showNotification(`欢迎回来！已加载${allUsers.length}个用户的答案`, 'success', 5000);
+                }
+            }, 1000);
+        }
+
+        // 当页面加载完成时初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
