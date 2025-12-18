@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>年度回顾 - 40个问题反思你的2025</title>
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,8 +18,10 @@
             line-height: 1.6;
             color: #333;
             background-color: #f8f5f0;
-            padding: 20px;
+            padding: 10px;
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="none" stroke="%23e6e0d7" stroke-width="0.5" d="M0,0 L100,100 M100,0 L0,100"/></svg>');
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .container {
@@ -29,8 +31,8 @@
         
         header {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -38,29 +40,31 @@
         }
         
         h1 {
-            font-size: 2.8rem;
+            font-size: 1.8rem;
             color: #5d4037;
             margin-bottom: 10px;
             font-weight: 700;
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: #795548;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .instructions {
             background-color: #fff9f0;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-left: 4px solid #d7ccc8;
+            font-size: 0.9rem;
         }
         
         .instructions h2 {
             color: #6d4c41;
             margin-bottom: 10px;
+            font-size: 1.2rem;
         }
         
         .instructions ol {
@@ -74,31 +78,31 @@
         .app-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 30px;
+            gap: 20px;
         }
         
         .questions-section {
             flex: 1;
-            min-width: 300px;
+            min-width: 100%;
             background-color: #fff;
-            padding: 25px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         
         .answers-section {
             flex: 2;
-            min-width: 300px;
+            min-width: 100%;
             background-color: #fff;
-            padding: 25px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         
         .section-title {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             color: #5d4037;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #d7ccc8;
             display: flex;
@@ -111,19 +115,20 @@
         }
         
         .questions-list {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 10px;
         }
         
         .question-item {
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 12px;
+            margin-bottom: 10px;
             background-color: #faf5ef;
             border-radius: 8px;
             border-left: 4px solid #bcaaa4;
             transition: all 0.3s ease;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .question-item:hover {
@@ -138,26 +143,26 @@
         
         .question-number {
             display: inline-block;
-            width: 28px;
-            height: 28px;
+            width: 25px;
+            height: 25px;
             background-color: #8b7355;
             color: white;
             border-radius: 50%;
             text-align: center;
-            line-height: 28px;
-            margin-right: 10px;
+            line-height: 25px;
+            margin-right: 8px;
             font-weight: bold;
         }
         
         .answer-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
         
         .user-info {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         
@@ -167,20 +172,21 @@
             border-radius: 6px;
             font-size: 1rem;
             flex: 1;
-            min-width: 200px;
+            min-width: 100%;
+            -webkit-appearance: none;
         }
         
         .current-question {
             background-color: #f5f0eb;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .current-question h3 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #5d4037;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
         textarea {
@@ -189,20 +195,22 @@
             border: 1px solid #d7ccc8;
             border-radius: 6px;
             font-family: 'Ma Shan Zheng', cursive;
-            font-size: 1.1rem;
+            font-size: 1rem;
             min-height: 120px;
             resize: vertical;
             background-color: #fffefc;
+            -webkit-appearance: none;
         }
         
         .navigation-buttons {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
+            gap: 10px;
         }
         
         button {
-            padding: 12px 25px;
+            padding: 12px 20px;
             background-color: #8b7355;
             color: white;
             border: none;
@@ -211,6 +219,8 @@
             font-size: 1rem;
             font-weight: 600;
             transition: background-color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         button:hover {
@@ -238,114 +248,10 @@
             background-color: #45a049;
         }
         
-        .answers-list {
-            margin-top: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-        
-        .answer-entry {
-            padding: 15px;
-            margin-bottom: 15px;
-            background-color: #faf5ef;
-            border-radius: 8px;
-            border-left: 4px solid #bcaaa4;
-        }
-        
-        .answer-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #5d4037;
-        }
-        
-        .answer-text {
-            font-family: 'Ma Shan Zheng', cursive;
-            font-size: 1.1rem;
-        }
-        
-        .preview-container {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #fffefc;
-            border-radius: 8px;
-            border: 1px dashed #8b7355;
-        }
-        
-        .preview-title {
-            font-size: 1.5rem;
-            color: #5d4037;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .preview-parts {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .preview-part {
-            background-color: #fffefc;
-            border: 1px solid #d7ccc8;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .part-header {
-            background-color: #8b7355;
-            color: white;
-            padding: 12px;
-            font-size: 1.2rem;
-            text-align: center;
-        }
-        
-        .part-content {
-            line-height: 1.5;
-            font-size: 0.9rem;
-            color: #3e2723;
-            padding: 15px;
-            height: 400px;
-            overflow-y: auto;
-            white-space: pre-line;
-        }
-        
-        .part-footer {
-            padding: 15px;
-            text-align: center;
-            border-top: 1px solid #d7ccc8;
-        }
-        
-        .user-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .user-tag {
-            padding: 8px 15px;
-            background-color: #efebe9;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .user-tag i {
-            color: #8b7355;
-        }
-        
         .handwritten-note {
             font-family: 'Ma Shan Zheng', cursive;
             color: #5d4037;
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-top: 10px;
             text-align: center;
         }
@@ -374,16 +280,17 @@
         
         footer {
             text-align: center;
-            margin-top: 40px;
-            padding: 20px;
+            margin-top: 30px;
+            padding: 15px;
             color: #795548;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
         
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
+            left: 20px;
             padding: 15px 20px;
             background-color: #4caf50;
             color: white;
@@ -391,7 +298,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             display: none;
-            max-width: 300px;
+            text-align: center;
         }
         
         .notification.error {
@@ -423,19 +330,21 @@
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 10px;
+            justify-content: center;
         }
         
         .completion-dot {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .completion-dot.answered {
@@ -474,21 +383,181 @@
             margin-top: 15px;
         }
         
-        @media (max-width: 768px) {
+        .preview-container {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fffefc;
+            border-radius: 8px;
+            border: 1px dashed #8b7355;
+            display: none;
+        }
+        
+        .preview-title {
+            font-size: 1.3rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .preview-parts {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .preview-part {
+            background-color: #fffefc;
+            border: 1px solid #d7ccc8;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .part-header {
+            background-color: #8b7355;
+            color: white;
+            padding: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .part-content {
+            line-height: 1.5;
+            font-size: 0.85rem;
+            color: #3e2723;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-line;
+        }
+        
+        .part-footer {
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #d7ccc8;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .download-instruction {
+            font-size: 0.8rem;
+            color: #795548;
+            text-align: center;
+            padding: 10px;
+            background-color: #f5f0eb;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .download-instruction i {
+            margin-right: 5px;
+        }
+        
+        .image-preview {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-preview img {
+            max-width: 95%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+        
+        .image-preview-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            z-index: 2001;
+        }
+        
+        .image-preview-download {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .image-preview-instruction {
+            color: white;
+            margin-top: 15px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        /* 手机端特定样式 */
+        @media (min-width: 768px) {
             .app-container {
-                flex-direction: column;
+                flex-direction: row;
             }
             
-            h1 {
-                font-size: 2.2rem;
+            .questions-section, .answers-section {
+                min-width: auto;
             }
             
-            .section-title {
-                font-size: 1.5rem;
+            .questions-section {
+                flex: 1;
+            }
+            
+            .answers-section {
+                flex: 2;
             }
             
             .preview-parts {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                display: grid;
+            }
+            
+            .preview-title {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+        
+        @media (max-width: 767px) {
+            .navigation-buttons {
+                flex-direction: column;
+            }
+            
+            .navigation-buttons button {
+                width: 100%;
+            }
+            
+            .action-buttons button {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
             }
             
             .completion-dot {
@@ -502,6 +571,16 @@
 <body>
     <!-- 通知区域 -->
     <div id="notification" class="notification"></div>
+    
+    <!-- 图片预览区域 -->
+    <div id="imagePreview" class="image-preview">
+        <button id="imagePreviewClose" class="image-preview-close">&times;</button>
+        <img id="previewImage" alt="预览图片">
+        <button id="imagePreviewDownload" class="image-preview-download">下载图片</button>
+        <div class="image-preview-instruction">
+            如果无法下载，请长按图片选择"保存图片"
+        </div>
+    </div>
     
     <div class="container">
         <header>
@@ -517,8 +596,8 @@
                 <li>填写你的姓名或昵称，开始回答问题</li>
                 <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
                 <li>在每个问题下方的文本框中写下你的答案</li>
-                <li>完成所有问题后，点击"生成四张图片"按钮生成图片</li>
-                <li>生成的图片为JPG格式，共4张，每张包含10个问题和答案</li>
+                <li>完成所有问题后，点击"生成四张图片"按钮将答案保存到云端并生成图片</li>
+                <li><strong>手机用户：</strong>生成图片后，可以点击预览中的"查看图片"按钮，然后长按图片保存</li>
             </ol>
         </div>
         
@@ -546,7 +625,7 @@
                         </div>
                     </div>
                     
-                    <!-- 新增：题目完成状态显示 -->
+                    <!-- 题目完成状态显示 -->
                     <div class="completion-status">
                         <div class="completion-title">
                             <i class="fas fa-list-check"></i> 题目完成情况
@@ -581,19 +660,21 @@
             </div>
         </div>
         
-        <div class="preview-container" id="previewContainer" style="display:none;">
+        <div class="preview-container" id="previewContainer">
             <div class="preview-title">
-                <span><i class="fas fa-file-image"></i> 年度回顾卡片预览（共4部分）</span>
-                <button id="downloadAllBtn"><i class="fas fa-download"></i> 下载全部4张图片</button>
+                <span><i class="fas fa-file-image"></i> 年度回顾卡片（共4部分）</span>
+                <button id="downloadAllBtn"><i class="fas fa-download"></i> 一键下载全部</button>
             </div>
             <div class="preview-parts" id="previewParts">
                 <!-- 4个部分将通过JavaScript动态生成 -->
             </div>
+            <div class="download-instruction">
+                <i class="fas fa-mobile-alt"></i> 手机用户：如果无法下载，请点击"查看图片"后长按保存
+            </div>
         </div>
         
         <footer>
-            <p>© 2025 年度回顾反思 </p>
-        
+            <p>© 2025 年度回顾反思 | HiHeart </p>
         </footer>
     </div>
 
@@ -602,10 +683,7 @@
     
     <script>
         // === 配置部分 ===
-        // 1. Web App URL（新的部署URL）
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4aiBHwTLtcgba1bZsHEJv9mPzvhXgXbLjR4VOEWY9B4EV0I677J3Y6g7pAx11xUmb9g/exec';
-        
-        // 2. Google Sheet ID
         const GOOGLE_SHEET_ID = '1mwloK9-aOUEWR7Mn9AHnfsW17I5BZ0gdv0xSuINg56g';
         
         // 40个年度问题
@@ -659,6 +737,9 @@
             currentQuestionIndex: 0
         };
 
+        // 存储生成的图片数据
+        let generatedImages = [];
+        
         // DOM元素
         const questionsList = document.getElementById('questionsList');
         const currentQuestionText = document.getElementById('currentQuestionText');
@@ -678,6 +759,12 @@
         const answeredCountElement = document.getElementById('answeredCount');
         const unansweredCountElement = document.getElementById('unansweredCount');
         const completionDots = document.getElementById('completionDots');
+        
+        // 图片预览相关元素
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const imagePreviewClose = document.getElementById('imagePreviewClose');
+        const imagePreviewDownload = document.getElementById('imagePreviewDownload');
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -688,6 +775,11 @@
             setTimeout(() => {
                 notification.style.display = 'none';
             }, duration);
+        }
+
+        // 检测是否为移动设备
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
         // 初始化完成状态圆点
@@ -904,25 +996,68 @@
             userNameInput.disabled = true;
         }
 
-        // 创建图片生成器 - 生成JPG格式
-        function createImageGenerator(partIndex, partTitle, questionsSubset, answersSubset) {
-            return () => {
+        // 显示图片预览
+        function showImagePreview(imageDataUrl, partIndex) {
+            previewImage.src = imageDataUrl;
+            previewImage.dataset.part = partIndex;
+            imagePreview.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭图片预览
+        function closeImagePreview() {
+            imagePreview.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 下载图片（兼容移动端）
+        function downloadImage(imageDataUrl, filename) {
+            // 创建临时链接
+            const link = document.createElement('a');
+            link.href = imageDataUrl;
+            link.download = filename;
+            
+            // 对于移动设备，使用新窗口打开
+            if (isMobileDevice()) {
+                const newWindow = window.open();
+                newWindow.document.write(`<img src="${imageDataUrl}" style="max-width:100%;"/>`);
+                newWindow.document.close();
+                showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
+                return false;
+            }
+            
+            // 对于桌面设备，尝试直接下载
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            return true;
+        }
+
+        // 生成单张图片
+        function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
+            return new Promise((resolve, reject) => {
                 const totalChars = answersSubset.reduce((total, answer) => total + (answer || "").length, 0);
                 
+                // 根据设备类型调整图片尺寸
+                const isMobile = isMobileDevice();
+                const width = isMobile ? 750 : 1080; // 移动端使用750px宽度
+                const height = isMobile ? 1334 : 1920; // 移动端使用1334px高度
+                
                 let baseFontSize;
-                if (totalChars > 10000) baseFontSize = 14;
-                else if (totalChars > 8000) baseFontSize = 16;
-                else if (totalChars > 6000) baseFontSize = 18;
-                else if (totalChars > 4000) baseFontSize = 20;
-                else if (totalChars > 3000) baseFontSize = 22;
-                else if (totalChars > 2000) baseFontSize = 24;
-                else if (totalChars > 1000) baseFontSize = 26;
-                else baseFontSize = 28;
+                if (totalChars > 10000) baseFontSize = isMobile ? 12 : 14;
+                else if (totalChars > 8000) baseFontSize = isMobile ? 13 : 16;
+                else if (totalChars > 6000) baseFontSize = isMobile ? 14 : 18;
+                else if (totalChars > 4000) baseFontSize = isMobile ? 15 : 20;
+                else if (totalChars > 3000) baseFontSize = isMobile ? 16 : 22;
+                else if (totalChars > 2000) baseFontSize = isMobile ? 17 : 24;
+                else if (totalChars > 1000) baseFontSize = isMobile ? 18 : 26;
+                else baseFontSize = isMobile ? 20 : 28;
                 
                 const tempContainer = document.createElement('div');
-                tempContainer.style.width = '1080px';
-                tempContainer.style.height = '1920px';
-                tempContainer.style.padding = '30px 40px';
+                tempContainer.style.width = `${width}px`;
+                tempContainer.style.height = `${height}px`;
+                tempContainer.style.padding = isMobile ? '20px 25px' : '30px 40px';
                 tempContainer.style.backgroundColor = '#fffefc';
                 tempContainer.style.color = '#3e2723';
                 tempContainer.style.lineHeight = '1.4';
@@ -931,16 +1066,17 @@
                 tempContainer.style.top = '0';
                 tempContainer.style.overflow = 'hidden';
                 tempContainer.style.boxSizing = 'border-box';
+                tempContainer.style.fontSize = `${baseFontSize}px`;
                 document.body.appendChild(tempContainer);
                 
                 let contentHTML = `
-                    <div style="text-align: center; margin-bottom: 15px; font-family: 'Noto Sans SC', sans-serif;">
-                        <div style="font-size: ${baseFontSize + 6}px; color: #5d4037; margin-bottom: 5px; font-weight: bold;">${currentUser.name}的年度回顾</div>
-                        <div style="font-size: ${baseFontSize + 4}px; color: #795548; margin-bottom: 3px;">${partTitle}</div>
+                    <div style="text-align: center; margin-bottom: ${isMobile ? '10px' : '15px'}; font-family: 'Noto Sans SC', sans-serif;">
+                        <div style="font-size: ${baseFontSize + (isMobile ? 4 : 6)}px; color: #5d4037; margin-bottom: 5px; font-weight: bold;">${currentUser.name}的年度回顾</div>
+                        <div style="font-size: ${baseFontSize + (isMobile ? 2 : 4)}px; color: #795548; margin-bottom: 3px;">${partTitle}</div>
                         <div style="font-size: ${baseFontSize}px; color: #8d6e63;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
                         <hr style="border: none; border-top: 1px solid #8b7355; margin: 8px 0 12px;">
                     </div>
-                    <div style="height: calc(1920px - 120px); overflow: hidden; padding-right: 5px;">
+                    <div style="height: calc(${height}px - ${isMobile ? '100px' : '120px'}); overflow: hidden; padding-right: 5px;">
                 `;
                 
                 questionsSubset.forEach((question, index) => {
@@ -953,12 +1089,12 @@
                     }
                     
                     contentHTML += `
-                        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+                        <div style="margin-bottom: ${isMobile ? '15px' : '20px'}; page-break-inside: avoid;">
                             <div style="font-size: ${baseFontSize}px; color: #5d4037; margin-bottom: 4px; display: flex; align-items: flex-start; font-family: 'Noto Sans SC', sans-serif;">
-                                <span style="background-color: #8b7355; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: ${baseFontSize - 4}px; flex-shrink: 0;">${questionNumber}</span>
+                                <span style="background-color: #8b7355; color: white; border-radius: 50%; min-width: ${isMobile ? '28px' : '32px'}; height: ${isMobile ? '28px' : '32px'}; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: ${baseFontSize - (isMobile ? 2 : 4)}px; flex-shrink: 0;">${questionNumber}</span>
                                 <span style="font-weight: bold; line-height: 1.3;">${question}</span>
                             </div>
-                            <div style="font-size: ${baseFontSize - 2}px; color: #3e2723; margin-left: 42px; margin-right: 5px; font-family: 'Ma Shan Zheng', cursive; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
+                            <div style="font-size: ${baseFontSize - (isMobile ? 1 : 2)}px; color: #3e2723; margin-left: ${isMobile ? '38px' : '42px'}; margin-right: 5px; font-family: 'Ma Shan Zheng', cursive; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
                                 ${displayAnswer}
                             </div>
                         </div>
@@ -967,7 +1103,7 @@
                 
                 contentHTML += `
                     </div>
-                    <div style="text-align: center; margin-top: 15px; color: #795548; font-size: ${baseFontSize - 6}px; border-top: 1px solid #d7ccc8; padding-top: 10px; font-family: 'Noto Sans SC', sans-serif;">
+                    <div style="text-align: center; margin-top: ${isMobile ? '10px' : '15px'}; color: #795548; font-size: ${baseFontSize - (isMobile ? 4 : 6)}px; border-top: 1px solid #d7ccc8; padding-top: 10px; font-family: 'Noto Sans SC', sans-serif;">
                         <div>© ${new Date().getFullYear()} 年度回顾反思</div>
                         <div>生成时间: ${new Date().toLocaleDateString('zh-CN')}</div>
                     </div>
@@ -975,43 +1111,51 @@
                 
                 tempContainer.innerHTML = contentHTML;
                 
-                html2canvas(tempContainer, {
-                    scale: 2,
+                // 设置html2canvas参数
+                const options = {
+                    scale: isMobile ? 1.5 : 2, // 移动端使用较低的scale减少内存使用
                     backgroundColor: '#fffefc',
                     useCORS: true,
                     logging: false,
-                    width: 1080,
-                    height: 1920,
-                    windowWidth: 1080,
-                    windowHeight: 1920
-                }).then(canvas => {
-                    if (canvas.width !== 1080 || canvas.height !== 1920) {
+                    width: width,
+                    height: height,
+                    windowWidth: width,
+                    windowHeight: height,
+                    onclone: function(clonedDoc) {
+                        // 确保字体加载
+                        const style = clonedDoc.createElement('style');
+                        style.textContent = `
+                            @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+                        `;
+                        clonedDoc.head.appendChild(style);
+                    }
+                };
+                
+                html2canvas(tempContainer, options).then(canvas => {
+                    // 确保画布尺寸正确
+                    if (canvas.width !== width || canvas.height !== height) {
                         const finalCanvas = document.createElement('canvas');
-                        finalCanvas.width = 1080;
-                        finalCanvas.height = 1920;
+                        finalCanvas.width = width;
+                        finalCanvas.height = height;
                         const ctx = finalCanvas.getContext('2d');
-                        ctx.drawImage(canvas, 0, 0, 1080, 1920);
+                        ctx.drawImage(canvas, 0, 0, width, height);
                         
-                        const link = document.createElement('a');
-                        link.download = `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`;
-                        // 生成JPG格式图片，质量为0.9
-                        link.href = finalCanvas.toDataURL('image/jpeg', 0.9);
-                        link.click();
+                        // 生成JPG格式图片，质量为0.85
+                        const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
+                        resolve(imageDataUrl);
                     } else {
-                        const link = document.createElement('a');
-                        link.download = `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`;
-                        // 生成JPG格式图片，质量为0.9
-                        link.href = canvas.toDataURL('image/jpeg', 0.9);
-                        link.click();
+                        // 生成JPG格式图片，质量为0.85
+                        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                        resolve(imageDataUrl);
                     }
                     
                     document.body.removeChild(tempContainer);
                 }).catch(error => {
                     console.error('生成图片时出错:', error);
-                    alert('生成图片时出错，请重试。如果答案过长，请考虑缩短答案。');
                     document.body.removeChild(tempContainer);
+                    reject(error);
                 });
-            };
+            });
         }
 
         // 生成图片并提交答案
@@ -1040,9 +1184,11 @@
                     showNotification('答案已成功提交到云端！', 'success');
                 }
                 
-                // 显示图片预览
-                previewContainer.style.display = 'block';
-                previewParts.innerHTML = '';
+                // 显示生成图片中的通知
+                showNotification('正在生成图片，请稍候...', 'warning', 5000);
+                
+                // 清空之前的图片数据
+                generatedImages = [];
                 
                 const partTitles = [
                     "第一部分: 成长与经历 (第1-10题)",
@@ -1051,86 +1197,140 @@
                     "第四部分: 文化与生活 (第31-40题)"
                 ];
                 
+                // 生成所有图片
                 for (let partIndex = 0; partIndex < 4; partIndex++) {
                     const startIdx = partIndex * 10;
                     const endIdx = startIdx + 10;
                     const partQuestions = questions.slice(startIdx, endIdx);
                     const partAnswers = currentUser.answers.slice(startIdx, endIdx);
                     
-                    const partHasLongAnswer = partAnswers.some(answer => answer && answer.length > 1000);
-                    
-                    const partElement = document.createElement('div');
-                    partElement.className = 'preview-part';
-                    partElement.id = `previewPart${partIndex}`;
-                    
-                    let previewHTML = '';
-                    partQuestions.forEach((question, index) => {
-                        const questionNumber = startIdx + index + 1;
-                        const answer = partAnswers[index] || "（未回答）";
-                        const answerPreview = answer.length > 60 ? answer.substring(0, 60) + '...' : answer;
-                        previewHTML += `<div style="margin-bottom: 10px;">
-                            <div style="font-weight: bold; color: #5d4037; font-family: 'Noto Sans SC', sans-serif;">${questionNumber}. ${question}</div>
-                            <div style="padding-left: 20px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive;">${answerPreview}</div>
-                        </div>`;
-                    });
-                    
-                    partElement.innerHTML = `
-                        <div class="part-header">${partTitles[partIndex]}${partHasLongAnswer ? ' (含长答案)' : ''}</div>
-                        <div class="part-content">${previewHTML}</div>
-                        <div class="part-footer">
-                            <button class="download-part-btn" data-part="${partIndex}">
-                                <i class="fas fa-download"></i> 下载第${partIndex + 1}部分
-                            </button>
-                        </div>
-                    `;
-                    
-                    previewParts.appendChild(partElement);
-                    
-                    const downloadBtn = partElement.querySelector('.download-part-btn');
-                    downloadBtn.addEventListener('click', createImageGenerator(
-                        partIndex, 
-                        partTitles[partIndex], 
-                        partQuestions, 
-                        partAnswers
-                    ));
+                    try {
+                        const imageDataUrl = await generateSingleImage(partIndex, partTitles[partIndex], partQuestions, partAnswers);
+                        generatedImages.push({
+                            index: partIndex,
+                            title: partTitles[partIndex],
+                            dataUrl: imageDataUrl,
+                            filename: `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`
+                        });
+                    } catch (error) {
+                        showNotification(`第${partIndex + 1}部分生成失败: ${error.message}`, 'error');
+                        continue;
+                    }
                 }
                 
-                previewContainer.scrollIntoView({ behavior: 'smooth' });
+                // 显示预览
+                showPreview();
                 
             } catch (error) {
                 showNotification('生成图片时出错: ' + error.message, 'error');
             }
         }
 
-        // 下载所有图片
-        function downloadAllImages() {
-            alert('即将开始下载4张JPG格式图片，每张图片为1080×1920像素，包含完整的10个问题和答案。系统会自动调整布局以确保所有内容都能放入图片中。请根据浏览器提示允许下载。');
+        // 显示预览
+        function showPreview() {
+            previewContainer.style.display = 'block';
+            previewParts.innerHTML = '';
             
-            const downloadQueue = [];
-            const partTitles = [
-                "第一部分: 成长与经历 (第1-10题)",
-                "第二部分: 反思与感悟 (第11-20题)", 
-                "第三部分: 个人与社交 (第21-30题)",
-                "第四部分: 文化与生活 (第31-40题)"
-            ];
-            
-            for (let partIndex = 0; partIndex < 4; partIndex++) {
-                const startIdx = partIndex * 10;
-                const endIdx = startIdx + 10;
-                const partQuestions = questions.slice(startIdx, endIdx);
-                const partAnswers = currentUser.answers.slice(startIdx, endIdx);
-                
-                downloadQueue.push({
-                    generator: createImageGenerator(partIndex, partTitles[partIndex], partQuestions, partAnswers),
-                    delay: partIndex * 2500
-                });
+            if (generatedImages.length === 0) {
+                previewParts.innerHTML = '<p style="text-align: center; padding: 20px; color: #795548;">图片生成失败，请重试。</p>';
+                return;
             }
             
-            downloadQueue.forEach((item, index) => {
-                setTimeout(() => {
-                    item.generator();
-                }, item.delay);
+            generatedImages.forEach((image, index) => {
+                const partElement = document.createElement('div');
+                partElement.className = 'preview-part';
+                partElement.id = `previewPart${index}`;
+                
+                const partHasLongAnswer = currentUser.answers.slice(index * 10, (index + 1) * 10)
+                    .some(answer => answer && answer.length > 1000);
+                
+                let previewHTML = '';
+                const partQuestions = questions.slice(index * 10, (index + 1) * 10);
+                const partAnswers = currentUser.answers.slice(index * 10, (index + 1) * 10);
+                
+                partQuestions.forEach((question, qIndex) => {
+                    const questionNumber = index * 10 + qIndex + 1;
+                    const answer = partAnswers[qIndex] || "（未回答）";
+                    const answerPreview = answer.length > 60 ? answer.substring(0, 60) + '...' : answer;
+                    previewHTML += `<div style="margin-bottom: 10px;">
+                        <div style="font-weight: bold; color: #5d4037; font-family: 'Noto Sans SC', sans-serif;">${questionNumber}. ${question}</div>
+                        <div style="padding-left: 20px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive;">${answerPreview}</div>
+                    </div>`;
+                });
+                
+                partElement.innerHTML = `
+                    <div class="part-header">${image.title}${partHasLongAnswer ? ' (含长答案)' : ''}</div>
+                    <div class="part-content">${previewHTML}</div>
+                    <div class="part-footer">
+                        <button class="view-image-btn" data-index="${index}">
+                            <i class="fas fa-eye"></i> 查看图片
+                        </button>
+                        <button class="download-single-btn" data-index="${index}">
+                            <i class="fas fa-download"></i> 下载图片
+                        </button>
+                    </div>
+                `;
+                
+                previewParts.appendChild(partElement);
+                
+                // 添加查看图片事件
+                const viewBtn = partElement.querySelector('.view-image-btn');
+                viewBtn.addEventListener('click', () => {
+                    showImagePreview(image.dataUrl, index);
+                });
+                
+                // 添加下载图片事件
+                const downloadBtn = partElement.querySelector('.download-single-btn');
+                downloadBtn.addEventListener('click', () => {
+                    const success = downloadImage(image.dataUrl, image.filename);
+                    if (!success && isMobileDevice()) {
+                        // 如果移动端直接下载失败，显示预览
+                        showImagePreview(image.dataUrl, index);
+                    }
+                });
             });
+            
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+            showNotification('图片生成完成！', 'success');
+        }
+
+        // 下载所有图片
+        async function downloadAllImages() {
+            if (generatedImages.length === 0) {
+                showNotification('请先生成图片', 'warning');
+                return;
+            }
+            
+            // 移动端特殊处理
+            if (isMobileDevice()) {
+                const confirmDownload = confirm('手机端下载多张图片可能不太方便。建议逐张下载或查看图片后长按保存。是否继续尝试下载？');
+                if (!confirmDownload) {
+                    return;
+                }
+            }
+            
+            let successCount = 0;
+            
+            // 逐张下载图片
+            for (let i = 0; i < generatedImages.length; i++) {
+                const image = generatedImages[i];
+                const success = downloadImage(image.dataUrl, image.filename);
+                
+                if (success) {
+                    successCount++;
+                }
+                
+                // 每张图片下载间隔1秒，避免浏览器限制
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            if (successCount > 0) {
+                showNotification(`成功下载${successCount}张图片`, 'success');
+            }
+            
+            if (successCount < generatedImages.length && isMobileDevice()) {
+                showNotification('部分图片下载失败，建议查看图片后长按保存', 'warning');
+            }
         }
 
         // 初始化事件监听器
@@ -1165,6 +1365,26 @@
 
             downloadAllBtn.addEventListener('click', downloadAllImages);
             
+            // 图片预览相关事件
+            imagePreviewClose.addEventListener('click', closeImagePreview);
+            imagePreviewDownload.addEventListener('click', () => {
+                const partIndex = parseInt(previewImage.dataset.part);
+                const image = generatedImages[partIndex];
+                if (image) {
+                    const success = downloadImage(image.dataUrl, image.filename);
+                    if (!success && isMobileDevice()) {
+                        showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
+                    }
+                }
+            });
+            
+            // 点击图片预览背景关闭
+            imagePreview.addEventListener('click', (e) => {
+                if (e.target === imagePreview) {
+                    closeImagePreview();
+                }
+            });
+            
             answerInput.addEventListener('blur', saveAnswer);
             
             answerInput.addEventListener('keydown', (e) => {
@@ -1172,6 +1392,22 @@
                     saveAnswer();
                 }
             });
+            
+            // 防止移动端缩放
+            document.addEventListener('touchstart', function(event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+            
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
         }
 
         // 初始化应用
