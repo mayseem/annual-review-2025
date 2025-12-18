@@ -1110,7 +1110,7 @@
             return true;
         }
 
-        // 生成单张图片 - 修复移动端问题
+        // 生成单张图片 - 修复显示不完整和间距问题
         function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
             return new Promise((resolve, reject) => {
                 const totalChars = answersSubset.reduce((total, answer) => total + (answer || "").length, 0);
@@ -1120,23 +1120,25 @@
                 const width = isMobile ? 750 : 1080;
                 const height = isMobile ? 1334 : 1920;
                 
+                // 根据总字符数调整基础字体大小
                 let baseFontSize;
-                if (totalChars > 10000) baseFontSize = isMobile ? 12 : 14;
-                else if (totalChars > 8000) baseFontSize = isMobile ? 13 : 16;
-                else if (totalChars > 6000) baseFontSize = isMobile ? 14 : 18;
-                else if (totalChars > 4000) baseFontSize = isMobile ? 15 : 20;
-                else if (totalChars > 3000) baseFontSize = isMobile ? 16 : 22;
-                else if (totalChars > 2000) baseFontSize = isMobile ? 17 : 24;
-                else if (totalChars > 1000) baseFontSize = isMobile ? 18 : 26;
-                else baseFontSize = isMobile ? 20 : 28;
+                if (totalChars > 8000) baseFontSize = isMobile ? 10 : 12;
+                else if (totalChars > 6000) baseFontSize = isMobile ? 11 : 13;
+                else if (totalChars > 4000) baseFontSize = isMobile ? 12 : 14;
+                else if (totalChars > 2000) baseFontSize = isMobile ? 13 : 15;
+                else if (totalChars > 1000) baseFontSize = isMobile ? 14 : 16;
+                else baseFontSize = isMobile ? 15 : 17;
+                
+                // 确保字体不会太小
+                baseFontSize = Math.max(baseFontSize, isMobile ? 10 : 12);
                 
                 const tempContainer = document.createElement('div');
                 tempContainer.style.width = `${width}px`;
                 tempContainer.style.height = `${height}px`;
-                tempContainer.style.padding = isMobile ? '20px 25px' : '30px 40px';
+                tempContainer.style.padding = isMobile ? '15px 20px' : '20px 30px';
                 tempContainer.style.backgroundColor = '#fffefc';
                 tempContainer.style.color = '#3e2723';
-                tempContainer.style.lineHeight = '1.4';
+                tempContainer.style.lineHeight = '1.3'; // 减小行高
                 tempContainer.style.position = 'fixed';
                 tempContainer.style.left = '-9999px';
                 tempContainer.style.top = '0';
@@ -1146,32 +1148,39 @@
                 tempContainer.style.zIndex = '-9999';
                 document.body.appendChild(tempContainer);
                 
+                // 计算可用高度 = 总高度 - 页眉高度 - 页脚高度 - 内边距
+                const headerHeight = isMobile ? 70 : 90;
+                const footerHeight = isMobile ? 50 : 60;
+                const paddingTopBottom = isMobile ? 30 : 40;
+                const availableHeight = height - headerHeight - footerHeight - paddingTopBottom;
+                
                 let contentHTML = `
-                    <div style="text-align: center; margin-bottom: ${isMobile ? '10px' : '15px'}; font-family: 'Noto Sans SC', sans-serif;">
-                        <div style="font-size: ${baseFontSize + (isMobile ? 4 : 6)}px; color: #5d4037; margin-bottom: 5px; font-weight: bold;">${currentUser.name}的年度回顾</div>
-                        <div style="font-size: ${baseFontSize + (isMobile ? 2 : 4)}px; color: #795548; margin-bottom: 3px;">${partTitle}</div>
+                    <div style="text-align: center; margin-bottom: ${isMobile ? '8px' : '12px'}; font-family: 'Noto Sans SC', sans-serif; height: ${headerHeight}px; overflow: hidden;">
+                        <div style="font-size: ${baseFontSize + (isMobile ? 3 : 4)}px; color: #5d4037; margin-bottom: 4px; font-weight: bold;">${currentUser.name}的年度回顾</div>
+                        <div style="font-size: ${baseFontSize + (isMobile ? 2 : 3)}px; color: #795548; margin-bottom: 3px;">${partTitle}</div>
                         <div style="font-size: ${baseFontSize}px; color: #8d6e63;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
-                        <hr style="border: none; border-top: 1px solid #8b7355; margin: 8px 0 12px;">
+                        <hr style="border: none; border-top: 1px solid #8b7355; margin: 5px 0 8px;">
                     </div>
-                    <div style="height: calc(${height}px - ${isMobile ? '100px' : '120px'}); overflow: hidden; padding-right: 5px;">
+                    <div style="height: ${availableHeight}px; overflow-y: auto; padding-right: 5px;">
                 `;
                 
                 questionsSubset.forEach((question, index) => {
                     const questionNumber = partIndex * 10 + index + 1;
                     const answer = answersSubset[index] || "（未回答）";
                     
+                    // 截断过长的答案
                     let displayAnswer = answer;
-                    if (displayAnswer.length > 1000) {
-                        displayAnswer = displayAnswer.substring(0, 1000) + "...（内容过长，已截断）";
+                    if (displayAnswer.length > 800) {
+                        displayAnswer = displayAnswer.substring(0, 800) + "...（内容过长，已截断）";
                     }
                     
                     contentHTML += `
-                        <div style="margin-bottom: ${isMobile ? '15px' : '20px'}; page-break-inside: avoid;">
-                            <div style="font-size: ${baseFontSize}px; color: #5d4037; margin-bottom: 4px; display: flex; align-items: flex-start; font-family: 'Noto Sans SC', sans-serif;">
-                                <span style="background-color: #8b7355; color: white; border-radius: 50%; min-width: ${isMobile ? '28px' : '32px'}; height: ${isMobile ? '28px' : '32px'}; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: ${baseFontSize - (isMobile ? 2 : 4)}px; flex-shrink: 0;">${questionNumber}</span>
-                                <span style="font-weight: bold; line-height: 1.3;">${question}</span>
+                        <div style="margin-bottom: ${isMobile ? '8px' : '10px'}; page-break-inside: avoid;">
+                            <div style="font-size: ${baseFontSize}px; color: #5d4037; margin-bottom: 3px; display: flex; align-items: flex-start; font-family: 'Noto Sans SC', sans-serif;">
+                                <span style="background-color: #8b7355; color: white; border-radius: 50%; min-width: ${isMobile ? '24px' : '28px'}; height: ${isMobile ? '24px' : '28px'}; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: ${baseFontSize - (isMobile ? 1 : 2)}px; flex-shrink: 0;">${questionNumber}</span>
+                                <span style="font-weight: bold; line-height: 1.2;">${question}</span>
                             </div>
-                            <div style="font-size: ${baseFontSize - (isMobile ? 1 : 2)}px; color: #3e2723; margin-left: ${isMobile ? '38px' : '42px'}; margin-right: 5px; font-family: 'Ma Shan Zheng', cursive; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
+                            <div style="font-size: ${baseFontSize - (isMobile ? 0 : 1)}px; color: #3e2723; margin-left: ${isMobile ? '32px' : '36px'}; margin-right: 5px; font-family: 'Ma Shan Zheng', cursive; white-space: pre-wrap; word-wrap: break-word; line-height: 1.3;">
                                 ${displayAnswer}
                             </div>
                         </div>
@@ -1180,7 +1189,7 @@
                 
                 contentHTML += `
                     </div>
-                    <div style="text-align: center; margin-top: ${isMobile ? '10px' : '15px'}; color: #795548; font-size: ${baseFontSize - (isMobile ? 4 : 6)}px; border-top: 1px solid #d7ccc8; padding-top: 10px; font-family: 'Noto Sans SC', sans-serif;">
+                    <div style="text-align: center; margin-top: ${isMobile ? '8px' : '10px'}; color: #795548; font-size: ${baseFontSize - (isMobile ? 2 : 3)}px; border-top: 1px solid #d7ccc8; padding-top: 8px; font-family: 'Noto Sans SC', sans-serif; height: ${footerHeight}px; overflow: hidden;">
                         <div>© ${new Date().getFullYear()} 年度回顾反思</div>
                         <div>生成时间: ${new Date().toLocaleDateString('zh-CN')}</div>
                     </div>
@@ -1243,9 +1252,9 @@
 
         // 生成图片并提交答案
         async function generateImagesAndSubmit() {
-            const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 1000);
+            const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 800);
             if (hasLongAnswer) {
-                if (!confirm('检测到部分答案较长，为了确保所有内容都能放入图片中，系统可能会自动调整字体大小。是否继续生成图片？')) {
+                if (!confirm('检测到部分答案较长，为了确保所有内容都能放入图片中，系统会自动调整字体大小和间距。是否继续生成图片？')) {
                     return;
                 }
             }
@@ -1329,7 +1338,7 @@
                 partElement.id = `previewPart${index}`;
                 
                 const partHasLongAnswer = currentUser.answers.slice(index * 10, (index + 1) * 10)
-                    .some(answer => answer && answer.length > 1000);
+                    .some(answer => answer && answer.length > 800);
                 
                 let previewHTML = '';
                 const partQuestions = questions.slice(index * 10, (index + 1) * 10);
