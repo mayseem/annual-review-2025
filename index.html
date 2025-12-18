@@ -418,6 +418,32 @@
             background-color: #ff9800;
         }
         
+        .debug-info {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-title {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .debug-content {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
         @media (max-width: 768px) {
             .app-container {
                 flex-direction: column;
@@ -512,10 +538,20 @@
                             <button id="backupToLocalBtn" class="btn-small"><i class="fas fa-save"></i> 备份到本地</button>
                             <button id="restoreFromLocalBtn" class="btn-small"><i class="fas fa-upload"></i> 从本地恢复</button>
                             <button id="clearLocalBtn" class="btn-small btn-secondary"><i class="fas fa-trash"></i> 清除本地数据</button>
+                            <button id="testConnectionBtn" class="btn-small" style="background-color: #2196F3;"><i class="fas fa-wifi"></i> 测试连接</button>
                         </div>
                         <div style="margin-top: 10px; font-size: 0.8rem; color: #795548;">
-                            <i class="fas fa-info-circle"></i> 云端存储状态: <span id="cloudStatus">已连接</span>
+                            <i class="fas fa-info-circle"></i> 云端存储状态: <span id="cloudStatus">未连接</span>
                             <span style="margin-left: 10px;">数据表: <a href="https://docs.google.com/spreadsheets/d/1mwloK9-aOUEWR7Mn9AHnfsW17I5BZ0gdv0xSuINg56g/edit" target="_blank" style="color: #8b7355;">查看</a></span>
+                        </div>
+                        
+                        <!-- 调试信息区域 -->
+                        <div id="debugInfo" class="debug-info" style="display: none;">
+                            <div class="debug-title">
+                                <span>调试信息</span>
+                                <button onclick="clearDebugInfo()" style="padding: 2px 8px; font-size: 0.7rem; background-color: #f44336;">清除</button>
+                            </div>
+                            <div class="debug-content" id="debugContent"></div>
                         </div>
                     </div>
                 </div>
@@ -550,8 +586,8 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <script>
-        // === 配置部分 - 已为你配置好 ===
-        // 1. Web App URL（你提供的新URL）
+        // === 配置部分 ===
+        // 1. Web App URL（请确保已正确部署）
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvtrfRWwYB0prDACsWqwRs3VjiAz6OGeRV6Px7MLyb4KAQtqi-6fjM2Aihl_pnP11_ig/exec';
         
         // 2. Google Sheet ID
@@ -634,6 +670,27 @@
         const backupToLocalBtn = document.getElementById('backupToLocalBtn');
         const restoreFromLocalBtn = document.getElementById('restoreFromLocalBtn');
         const clearLocalBtn = document.getElementById('clearLocalBtn');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+
+        // 调试功能
+        function addDebugInfo(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            debugContent.textContent = logEntry + debugContent.textContent;
+            
+            if (debugInfo.style.display === 'none') {
+                debugInfo.style.display = 'block';
+            }
+            
+            console.log(`[${type}] ${message}`);
+        }
+
+        function clearDebugInfo() {
+            debugContent.textContent = '';
+            debugInfo.style.display = 'none';
+        }
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -641,47 +698,112 @@
             notification.className = `notification ${type}`;
             notification.style.display = 'block';
             
+            addDebugInfo(`通知: ${message} (${type})`, type);
+            
             setTimeout(() => {
                 notification.style.display = 'none';
             }, duration);
         }
 
-        // 保存数据到Google Sheets
-        async function saveToGoogleSheets() {
+        // 测试云端连接
+        async function testCloudConnection() {
             try {
-                const userData = {
-                    name: currentUser.name,
-                    answers: currentUser.answers,
-                    timestamp: new Date().toISOString(),
-                    completed: currentUser.answers.filter(a => a && a.trim() !== '').length
-                };
+                showNotification('正在测试云端连接...', 'warning', 2000);
+                cloudStatus.textContent = '测试中...';
+                cloudStatus.style.color = '#ff9800';
                 
-                // 使用FormData发送数据，避免CORS问题
-                const formData = new FormData();
-                formData.append('data', JSON.stringify(userData));
+                const testUrl = GOOGLE_SCRIPT_URL + '?action=test&timestamp=' + Date.now();
+                addDebugInfo(`发送测试请求到: ${testUrl}`);
                 
-                // 发送数据到Google Apps Script
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch(testUrl);
                 
-                // 尝试解析响应
-                let result;
-                try {
-                    result = await response.text();
-                    // 尝试解析为JSON
-                    result = JSON.parse(result);
-                } catch (e) {
-                    // 如果不是JSON，可能是纯文本
-                    console.log('响应不是JSON:', result);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
                 }
                 
-                console.log('数据已发送到Google Sheets', result);
-                showNotification('答案已保存到云端', 'success');
-                return { success: true, message: '数据已保存' };
+                const result = await response.text();
+                addDebugInfo(`测试响应: ${result}`);
+                
+                try {
+                    const data = JSON.parse(result);
+                    if (data.status === 'ok') {
+                        cloudStatus.textContent = '已连接';
+                        cloudStatus.style.color = '#4caf50';
+                        showNotification('云端连接正常', 'success');
+                        return true;
+                    }
+                } catch (e) {
+                    // 不是JSON格式，可能是纯文本
+                    if (result.includes('ok') || result.includes('success')) {
+                        cloudStatus.textContent = '已连接';
+                        cloudStatus.style.color = '#4caf50';
+                        showNotification('云端连接正常', 'success');
+                        return true;
+                    }
+                }
+                
+                throw new Error('响应格式不正确');
+                
             } catch (error) {
-                console.error('保存到Google Sheets失败:', error);
+                addDebugInfo(`连接测试失败: ${error.message}`, 'error');
+                cloudStatus.textContent = '连接失败';
+                cloudStatus.style.color = '#f44336';
+                showNotification(`云端连接失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // 保存数据到Google Sheets（使用GET请求简化版）
+        async function saveToGoogleSheets() {
+            try {
+                const answeredCount = currentUser.answers.filter(a => a && a.trim() !== '').length;
+                
+                // 构建查询参数
+                const params = new URLSearchParams();
+                params.append('action', 'save');
+                params.append('timestamp', new Date().toISOString());
+                params.append('name', currentUser.name);
+                params.append('completed', answeredCount.toString());
+                
+                // 只发送有答案的问题
+                currentUser.answers.forEach((answer, index) => {
+                    if (answer && answer.trim() !== '') {
+                        params.append(`q${index + 1}`, answer);
+                    }
+                });
+                
+                const url = GOOGLE_SCRIPT_URL + '?' + params.toString();
+                addDebugInfo(`发送数据到云端: ${url.substring(0, 200)}...`);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const resultText = await response.text();
+                addDebugInfo(`云端响应: ${resultText}`);
+                
+                let result;
+                try {
+                    result = JSON.parse(resultText);
+                } catch (e) {
+                    result = { success: false, message: '响应不是JSON格式' };
+                }
+                
+                if (result.success || result.message) {
+                    showNotification('答案已保存到云端', 'success');
+                    cloudStatus.textContent = '已连接';
+                    cloudStatus.style.color = '#4caf50';
+                    return { success: true, message: result.message || '数据已保存' };
+                } else {
+                    throw new Error(result.error || '保存失败');
+                }
+                
+            } catch (error) {
+                addDebugInfo(`保存到云端失败: ${error.message}`, 'error');
+                cloudStatus.textContent = '保存失败';
+                cloudStatus.style.color = '#f44336';
                 showNotification('云端保存失败，已保存到本地', 'warning');
                 return { success: false, message: error.message };
             }
@@ -692,30 +814,32 @@
             try {
                 showNotification('正在从云端加载数据...', 'warning', 5000);
                 
-                // 从Google Apps Script获取数据
-                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`);
-                let data;
+                const url = GOOGLE_SCRIPT_URL + '?action=getAll&nocache=' + Date.now();
+                addDebugInfo(`从云端加载数据: ${url}`);
                 
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    // 尝试解析为文本然后转为JSON
-                    const text = await response.text();
-                    try {
-                        data = JSON.parse(text);
-                    } catch (e2) {
-                        console.error('解析响应失败:', text);
-                        showNotification('云端数据格式错误', 'error');
-                        return;
-                    }
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
                 }
                 
-                if (data && data.length > 0) {
-                    // 更新所有用户数据
+                const resultText = await response.text();
+                addDebugInfo(`云端响应: ${resultText.substring(0, 200)}...`);
+                
+                let data;
+                try {
+                    data = JSON.parse(resultText);
+                } catch (e) {
+                    throw new Error('响应不是有效的JSON格式');
+                }
+                
+                if (data && Array.isArray(data)) {
+                    // 转换数据格式
                     allUsers = data.map(item => ({
-                        name: item.name,
-                        answers: item.answers,
-                        timestamp: item.timestamp
+                        name: item.name || '未知用户',
+                        answers: item.answers || [],
+                        timestamp: item.timestamp || new Date().toISOString(),
+                        completed: item.completed || 0
                     }));
                     
                     // 保存到本地存储
@@ -724,11 +848,17 @@
                     // 更新显示
                     displayAllAnswers();
                     showNotification(`成功加载${data.length}个用户的答案`, 'success');
+                    cloudStatus.textContent = '已连接';
+                    cloudStatus.style.color = '#4caf50';
+                } else if (data.error) {
+                    throw new Error(data.error);
                 } else {
                     showNotification('云端暂无数据', 'warning');
                 }
             } catch (error) {
-                console.error('从Google Sheets加载失败:', error);
+                addDebugInfo(`从云端加载失败: ${error.message}`, 'error');
+                cloudStatus.textContent = '加载失败';
+                cloudStatus.style.color = '#f44336';
                 showNotification('从云端加载失败: ' + error.message, 'error');
             }
         }
@@ -835,6 +965,7 @@
             }
             
             localStorage.setItem('annualReviewUsers', JSON.stringify(allUsers));
+            addDebugInfo(`保存用户进度: ${currentUser.name}, 已回答: ${currentUser.answers.filter(a => a.trim() !== "").length}/40`);
         }
 
         // 加载用户进度
@@ -843,6 +974,7 @@
             if (savedProgress) {
                 currentUser = JSON.parse(savedProgress);
                 updateQuestionDisplay();
+                addDebugInfo(`加载用户进度: ${currentUser.name}`);
             }
         }
 
@@ -862,6 +994,8 @@
             updateQuestionDisplay();
             startBtn.disabled = true;
             userNameInput.disabled = true;
+            
+            addDebugInfo(`开始回答: ${name}`);
         }
 
         // 创建图片生成器
@@ -1039,6 +1173,7 @@
             
             // 保存用户到云端
             saveToGoogleSheets();
+            addDebugInfo(`生成图片: ${currentUser.name}`);
         }
 
         // 下载所有图片
@@ -1118,6 +1253,7 @@
             allUsers = JSON.parse(localStorage.getItem('annualReviewUsers')) || [];
             displayAllAnswers();
             answersList.scrollIntoView({ behavior: 'smooth' });
+            addDebugInfo(`查看所有用户答案: ${allUsers.length}个用户`);
         }
 
         // 备份到本地
@@ -1139,6 +1275,7 @@
             
             URL.revokeObjectURL(url);
             showNotification('备份已保存到本地文件', 'success');
+            addDebugInfo('创建本地备份');
         }
 
         // 从本地恢复
@@ -1170,9 +1307,11 @@
                             }
                             
                             showNotification('数据恢复成功', 'success');
+                            addDebugInfo(`从本地恢复数据: ${data.allUsers?.length || 0}个用户`);
                         }
                     } catch (error) {
                         showNotification('文件格式错误，无法恢复', 'error');
+                        addDebugInfo(`恢复失败: ${error.message}`, 'error');
                     }
                 };
                 reader.readAsText(file);
@@ -1197,6 +1336,7 @@
                 startBtn.disabled = false;
                 userNameInput.disabled = false;
                 showNotification('本地数据已清除', 'success');
+                addDebugInfo('清除本地数据');
             }
         }
 
@@ -1245,6 +1385,7 @@
             backupToLocalBtn.addEventListener('click', backupToLocal);
             restoreFromLocalBtn.addEventListener('click', restoreFromLocal);
             clearLocalBtn.addEventListener('click', clearLocalData);
+            testConnectionBtn.addEventListener('click', testCloudConnection);
         }
 
         // 初始化应用
@@ -1261,15 +1402,10 @@
             
             // 测试云端连接
             setTimeout(() => {
-                // 简单测试连接
-                fetch(GOOGLE_SCRIPT_URL + '?test=1')
-                    .then(response => {
-                        console.log('云端连接测试成功');
-                    })
-                    .catch(error => {
-                        console.log('云端连接测试失败，但应用仍可使用本地存储');
-                    });
+                testCloudConnection();
             }, 1000);
+            
+            addDebugInfo('应用初始化完成');
         }
 
         // 当页面加载完成时初始化应用
