@@ -1110,27 +1110,47 @@
             return true;
         }
 
-        // 生成单张图片 - 修复显示不完整和间距问题
+        // 生成单张图片 - 优化版本，固定布局，只调整答案大小
         function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
             return new Promise((resolve, reject) => {
+                // 计算答案总字符数
                 const totalChars = answersSubset.reduce((total, answer) => total + (answer || "").length, 0);
                 
-                // 根据设备类型调整图片尺寸
+                // 根据设备类型和字符数决定图片尺寸
                 const isMobile = isMobileDevice();
-                const width = isMobile ? 750 : 1080;
-                const height = isMobile ? 1334 : 1920;
+                let width, height;
                 
-                // 根据总字符数调整基础字体大小
-                let baseFontSize;
-                if (totalChars > 8000) baseFontSize = isMobile ? 10 : 12;
-                else if (totalChars > 6000) baseFontSize = isMobile ? 11 : 13;
-                else if (totalChars > 4000) baseFontSize = isMobile ? 12 : 14;
-                else if (totalChars > 2000) baseFontSize = isMobile ? 13 : 15;
-                else if (totalChars > 1000) baseFontSize = isMobile ? 14 : 16;
-                else baseFontSize = isMobile ? 15 : 17;
+                if (isMobile) {
+                    width = 750;  // 移动端宽度
+                    height = 1334; // 移动端高度（iPhone 8 Plus）
+                } else {
+                    width = 1080;  // 桌面端宽度
+                    height = 1920; // 桌面端高度
+                }
                 
-                // 确保字体不会太小
-                baseFontSize = Math.max(baseFontSize, isMobile ? 10 : 12);
+                // 根据答案字符数决定字体大小
+                // 基础设置：答案区域占比60%的高度，平均每行字符数
+                const availableHeightForAnswers = height * 0.6;
+                const linesPerQuestion = 8; // 每道题平均行数
+                const totalLines = linesPerQuestion * 10;
+                const avgCharsPerLine = Math.max(10, Math.min(25, Math.floor(totalChars / totalLines)));
+                
+                // 根据每行平均字符数决定答案字体大小
+                let answerFontSize;
+                if (avgCharsPerLine > 20) answerFontSize = isMobile ? 11 : 13;
+                else if (avgCharsPerLine > 15) answerFontSize = isMobile ? 12 : 14;
+                else if (avgCharsPerLine > 10) answerFontSize = isMobile ? 13 : 15;
+                else answerFontSize = isMobile ? 14 : 16;
+                
+                // 确保最小字体大小
+                answerFontSize = Math.max(answerFontSize, isMobile ? 11 : 13);
+                
+                // 固定问题字体大小
+                const questionFontSize = isMobile ? 14 : 16;
+                const questionNumberSize = isMobile ? 12 : 14;
+                const titleFontSize = isMobile ? 18 : 22;
+                const subtitleFontSize = isMobile ? 15 : 18;
+                const footerFontSize = isMobile ? 11 : 13;
                 
                 const tempContainer = document.createElement('div');
                 tempContainer.style.width = `${width}px`;
@@ -1138,60 +1158,84 @@
                 tempContainer.style.padding = isMobile ? '15px 20px' : '20px 30px';
                 tempContainer.style.backgroundColor = '#fffefc';
                 tempContainer.style.color = '#3e2723';
-                tempContainer.style.lineHeight = '1.3'; // 减小行高
                 tempContainer.style.position = 'fixed';
                 tempContainer.style.left = '-9999px';
                 tempContainer.style.top = '0';
                 tempContainer.style.overflow = 'hidden';
                 tempContainer.style.boxSizing = 'border-box';
-                tempContainer.style.fontSize = `${baseFontSize}px`;
                 tempContainer.style.zIndex = '-9999';
                 document.body.appendChild(tempContainer);
                 
-                // 计算可用高度 = 总高度 - 页眉高度 - 页脚高度 - 内边距
-                const headerHeight = isMobile ? 70 : 90;
-                const footerHeight = isMobile ? 50 : 60;
-                const paddingTopBottom = isMobile ? 30 : 40;
-                const availableHeight = height - headerHeight - footerHeight - paddingTopBottom;
+                // 计算各部分高度
+                const headerHeight = isMobile ? 80 : 100;
+                const footerHeight = isMobile ? 60 : 80;
+                const contentHeight = height - headerHeight - footerHeight;
+                const questionHeight = contentHeight * 0.4; // 问题部分占40%
+                const answerHeight = contentHeight * 0.6;   // 答案部分占60%
+                
+                // 每道题的高度分配
+                const questionItemHeight = questionHeight / 10;
+                const answerItemHeight = answerHeight / 10;
                 
                 let contentHTML = `
-                    <div style="text-align: center; margin-bottom: ${isMobile ? '8px' : '12px'}; font-family: 'Noto Sans SC', sans-serif; height: ${headerHeight}px; overflow: hidden;">
-                        <div style="font-size: ${baseFontSize + (isMobile ? 3 : 4)}px; color: #5d4037; margin-bottom: 4px; font-weight: bold;">${currentUser.name}的年度回顾</div>
-                        <div style="font-size: ${baseFontSize + (isMobile ? 2 : 3)}px; color: #795548; margin-bottom: 3px;">${partTitle}</div>
-                        <div style="font-size: ${baseFontSize}px; color: #8d6e63;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
-                        <hr style="border: none; border-top: 1px solid #8b7355; margin: 5px 0 8px;">
+                    <div style="text-align: center; margin-bottom: ${isMobile ? '15px' : '20px'}; font-family: 'Noto Sans SC', sans-serif; height: ${headerHeight}px; overflow: hidden; padding-bottom: 10px; border-bottom: 1px solid #8b7355;">
+                        <div style="font-size: ${titleFontSize}px; color: #5d4037; margin-bottom: 5px; font-weight: bold; line-height: 1.2;">${currentUser.name}的年度回顾</div>
+                        <div style="font-size: ${subtitleFontSize}px; color: #795548; margin-bottom: 5px; font-weight: 600;">${partTitle}</div>
+                        <div style="font-size: ${questionNumberSize}px; color: #8d6e63;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
                     </div>
-                    <div style="height: ${availableHeight}px; overflow-y: auto; padding-right: 5px;">
+                    <div style="height: ${contentHeight}px; overflow: hidden;">
                 `;
+                
+                // 创建问题区域（固定位置）
+                contentHTML += `<div style="height: ${questionHeight}px; overflow: hidden; margin-bottom: 10px;">`;
                 
                 questionsSubset.forEach((question, index) => {
                     const questionNumber = partIndex * 10 + index + 1;
-                    const answer = answersSubset[index] || "（未回答）";
+                    const topPosition = index * questionItemHeight;
                     
-                    // 截断过长的答案
-                    let displayAnswer = answer;
+                    contentHTML += `
+                        <div style="position: absolute; top: ${headerHeight + topPosition}px; left: ${isMobile ? '20px' : '30px'}; right: ${isMobile ? '20px' : '30px'}; height: ${questionItemHeight}px; display: flex; align-items: flex-start; padding: 5px 0;">
+                            <div style="flex-shrink: 0; margin-right: 10px;">
+                                <span style="background-color: #8b7355; color: white; border-radius: 50%; width: ${isMobile ? '28px' : '32px'}; height: ${isMobile ? '28px' : '32px'}; display: inline-flex; align-items: center; justify-content: center; font-size: ${questionNumberSize}px; font-weight: bold;">${questionNumber}</span>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-size: ${questionFontSize}px; color: #5d4037; font-weight: bold; line-height: 1.3; font-family: 'Noto Sans SC', sans-serif;">${question}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentHTML += `</div>`;
+                
+                // 创建答案区域（固定位置，只调整字体大小）
+                contentHTML += `<div style="height: ${answerHeight}px; overflow: hidden;">`;
+                
+                answersSubset.forEach((answer, index) => {
+                    const questionNumber = partIndex * 10 + index + 1;
+                    const topPosition = index * answerItemHeight;
+                    
+                    // 处理过长的答案
+                    let displayAnswer = answer || "（未回答）";
                     if (displayAnswer.length > 800) {
                         displayAnswer = displayAnswer.substring(0, 800) + "...（内容过长，已截断）";
                     }
                     
                     contentHTML += `
-                        <div style="margin-bottom: ${isMobile ? '8px' : '10px'}; page-break-inside: avoid;">
-                            <div style="font-size: ${baseFontSize}px; color: #5d4037; margin-bottom: 3px; display: flex; align-items: flex-start; font-family: 'Noto Sans SC', sans-serif;">
-                                <span style="background-color: #8b7355; color: white; border-radius: 50%; min-width: ${isMobile ? '24px' : '28px'}; height: ${isMobile ? '24px' : '28px'}; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: ${baseFontSize - (isMobile ? 1 : 2)}px; flex-shrink: 0;">${questionNumber}</span>
-                                <span style="font-weight: bold; line-height: 1.2;">${question}</span>
-                            </div>
-                            <div style="font-size: ${baseFontSize - (isMobile ? 0 : 1)}px; color: #3e2723; margin-left: ${isMobile ? '32px' : '36px'}; margin-right: 5px; font-family: 'Ma Shan Zheng', cursive; white-space: pre-wrap; word-wrap: break-word; line-height: 1.3;">
+                        <div style="position: absolute; top: ${headerHeight + questionHeight + topPosition + 10}px; left: ${isMobile ? '20px' : '30px'}; right: ${isMobile ? '20px' : '30px'}; height: ${answerItemHeight - 10}px; overflow: hidden; padding: 5px 0;">
+                            <div style="font-size: ${answerFontSize}px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; overflow: hidden;">
                                 ${displayAnswer}
                             </div>
                         </div>
                     `;
                 });
                 
+                contentHTML += `</div></div>`;
+                
+                // 页脚
                 contentHTML += `
-                    </div>
-                    <div style="text-align: center; margin-top: ${isMobile ? '8px' : '10px'}; color: #795548; font-size: ${baseFontSize - (isMobile ? 2 : 3)}px; border-top: 1px solid #d7ccc8; padding-top: 8px; font-family: 'Noto Sans SC', sans-serif; height: ${footerHeight}px; overflow: hidden;">
-                        <div>© ${new Date().getFullYear()} 年度回顾反思</div>
-                        <div>生成时间: ${new Date().toLocaleDateString('zh-CN')}</div>
+                    <div style="text-align: center; margin-top: 10px; color: #795548; font-size: ${footerFontSize}px; border-top: 1px solid #d7ccc8; padding-top: 10px; font-family: 'Noto Sans SC', sans-serif; height: ${footerHeight}px; overflow: hidden;">
+                        <div style="margin-bottom: 5px;">© ${new Date().getFullYear()} 年度回顾反思</div>
+                        <div>生成时间: ${new Date().toLocaleDateString('zh-CN')} ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
                     </div>
                 `;
                 
@@ -1201,7 +1245,7 @@
                 setTimeout(() => {
                     // 设置html2canvas参数
                     const options = {
-                        scale: isMobile ? 1 : 2, // 移动端使用1倍scale减少内存使用
+                        scale: isMobile ? 1 : 2,
                         backgroundColor: '#fffefc',
                         useCORS: true,
                         logging: false,
@@ -1212,7 +1256,6 @@
                         allowTaint: true,
                         useCORS: true,
                         onclone: function(clonedDoc) {
-                            // 确保字体加载
                             const style = clonedDoc.createElement('style');
                             style.textContent = `
                                 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
@@ -1231,12 +1274,12 @@
                             const ctx = finalCanvas.getContext('2d');
                             ctx.drawImage(canvas, 0, 0, width, height);
                             
-                            // 生成JPG格式图片，质量为0.85
-                            const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
+                            // 生成JPG格式图片，质量为0.9
+                            const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
                             resolve(imageDataUrl);
                         } else {
-                            // 生成JPG格式图片，质量为0.85
-                            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                            // 生成JPG格式图片，质量为0.9
+                            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
                             resolve(imageDataUrl);
                         }
                         
@@ -1254,7 +1297,7 @@
         async function generateImagesAndSubmit() {
             const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 800);
             if (hasLongAnswer) {
-                if (!confirm('检测到部分答案较长，为了确保所有内容都能放入图片中，系统会自动调整字体大小和间距。是否继续生成图片？')) {
+                if (!confirm('检测到部分答案较长，为了确保所有内容都能放入图片中，系统会自动调整字体大小。是否继续生成图片？')) {
                     return;
                 }
             }
