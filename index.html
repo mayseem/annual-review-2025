@@ -539,6 +539,7 @@
                             <button id="restoreFromLocalBtn" class="btn-small"><i class="fas fa-upload"></i> 从本地恢复</button>
                             <button id="clearLocalBtn" class="btn-small btn-secondary"><i class="fas fa-trash"></i> 清除本地数据</button>
                             <button id="testConnectionBtn" class="btn-small" style="background-color: #2196F3;"><i class="fas fa-wifi"></i> 测试连接</button>
+                            <button id="exportToSheetsBtn" class="btn-small" style="background-color: #4CAF50;"><i class="fas fa-file-export"></i> 导出为CSV</button>
                         </div>
                         <div style="margin-top: 10px; font-size: 0.8rem; color: #795548;">
                             <i class="fas fa-info-circle"></i> 云端存储状态: <span id="cloudStatus">未连接</span>
@@ -587,8 +588,8 @@
     
     <script>
         // === 配置部分 ===
-        // 1. Web App URL（请确保已正确部署）
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvtrfRWwYB0prDACsWqwRs3VjiAz6OGeRV6Px7MLyb4KAQtqi-6fjM2Aihl_pnP11_ig/exec';
+        // 1. Web App URL（新的部署URL）
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4aiBHwTLtcgba1bZsHEJv9mPzvhXgXbLjR4VOEWY9B4EV0I677J3Y6g7pAx11xUmb9g/exec';
         
         // 2. Google Sheet ID
         const GOOGLE_SHEET_ID = '1mwloK9-aOUEWR7Mn9AHnfsW17I5BZ0gdv0xSuINg56g';
@@ -671,6 +672,7 @@
         const restoreFromLocalBtn = document.getElementById('restoreFromLocalBtn');
         const clearLocalBtn = document.getElementById('clearLocalBtn');
         const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const exportToSheetsBtn = document.getElementById('exportToSheetsBtn');
         const debugInfo = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
 
@@ -718,31 +720,50 @@
                 const response = await fetch(testUrl);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP错误: ${response.status}`);
+                    throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
                 }
                 
-                const result = await response.text();
-                addDebugInfo(`测试响应: ${result}`);
+                const resultText = await response.text();
+                addDebugInfo(`测试响应原始文本: ${resultText.substring(0, 500)}`);
                 
+                // 尝试解析为JSON
+                let result;
                 try {
-                    const data = JSON.parse(result);
-                    if (data.status === 'ok') {
+                    result = JSON.parse(resultText);
+                    if (result.status === 'ok' || result.success) {
                         cloudStatus.textContent = '已连接';
                         cloudStatus.style.color = '#4caf50';
                         showNotification('云端连接正常', 'success');
                         return true;
+                    } else {
+                        cloudStatus.textContent = '响应异常';
+                        cloudStatus.style.color = '#ff9800';
+                        showNotification('云端响应异常: ' + (result.message || result.error), 'warning');
+                        return false;
                     }
                 } catch (e) {
-                    // 不是JSON格式，可能是纯文本
-                    if (result.includes('ok') || result.includes('success')) {
+                    // 不是JSON格式，检查文本内容
+                    if (resultText.includes('成功') || 
+                        resultText.includes('OK') || 
+                        resultText.includes('ok') || 
+                        resultText.includes('running')) {
                         cloudStatus.textContent = '已连接';
                         cloudStatus.style.color = '#4caf50';
                         showNotification('云端连接正常', 'success');
                         return true;
+                    } else if (resultText.includes('错误') || 
+                               resultText.includes('error') || 
+                               resultText.includes('Error')) {
+                        throw new Error('服务端错误: ' + resultText.substring(0, 200));
+                    } else {
+                        // 可能是HTML页面或其他内容
+                        cloudStatus.textContent = '响应异常';
+                        cloudStatus.style.color = '#ff9800';
+                        showNotification('云端响应格式异常', 'warning');
+                        console.log('响应内容:', resultText);
+                        return false;
                     }
                 }
-                
-                throw new Error('响应格式不正确');
                 
             } catch (error) {
                 addDebugInfo(`连接测试失败: ${error.message}`, 'error');
@@ -860,6 +881,52 @@
                 cloudStatus.textContent = '加载失败';
                 cloudStatus.style.color = '#f44336';
                 showNotification('从云端加载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 导出为CSV文件（备用方案）
+        function exportToCSV() {
+            try {
+                // 创建CSV内容
+                let csvContent = "时间戳,用户名,完成数量";
+                
+                // 添加问题标题
+                for (let i = 1; i <= 40; i++) {
+                    csvContent += `,问题${i}`;
+                }
+                csvContent += "\n";
+                
+                // 添加当前用户数据
+                const timestamp = new Date().toLocaleString('zh-CN');
+                const completed = currentUser.answers.filter(a => a.trim() !== '').length;
+                
+                // 转义用户名中的特殊字符
+                const escapedName = currentUser.name.replace(/"/g, '""');
+                csvContent += `"${timestamp}","${escapedName}",${completed}`;
+                
+                // 添加40个答案
+                for (let i = 0; i < 40; i++) {
+                    const answer = currentUser.answers[i] || '';
+                    // 转义答案中的特殊字符
+                    const escapedAnswer = answer.replace(/"/g, '""').replace(/\n/g, '\\n');
+                    csvContent += `,"${escapedAnswer}"`;
+                }
+                
+                // 创建下载链接
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${currentUser.name}_年度回顾_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                
+                URL.revokeObjectURL(link.href);
+                
+                showNotification('数据已导出为CSV文件，可手动导入到Google Sheets', 'success');
+                addDebugInfo('导出CSV文件成功');
+                
+            } catch (error) {
+                addDebugInfo(`导出CSV失败: ${error.message}`, 'error');
+                showNotification('导出CSV文件失败: ' + error.message, 'error');
             }
         }
 
@@ -1386,6 +1453,7 @@
             restoreFromLocalBtn.addEventListener('click', restoreFromLocal);
             clearLocalBtn.addEventListener('click', clearLocalData);
             testConnectionBtn.addEventListener('click', testCloudConnection);
+            exportToSheetsBtn.addEventListener('click', exportToCSV);
         }
 
         // 初始化应用
