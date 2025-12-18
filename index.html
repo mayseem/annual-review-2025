@@ -230,6 +230,14 @@
             background-color: #8d6e63;
         }
         
+        .btn-success {
+            background-color: #4CAF50;
+        }
+        
+        .btn-success:hover {
+            background-color: #45a049;
+        }
+        
         .answers-list {
             margin-top: 20px;
             max-height: 400px;
@@ -444,6 +452,78 @@
             word-break: break-all;
         }
         
+        .completion-status {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f5f0eb;
+            border-radius: 8px;
+        }
+        
+        .completion-title {
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .completion-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        
+        .completion-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .completion-dot.answered {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .completion-dot.unanswered {
+            background-color: #d7ccc8;
+            color: #795548;
+        }
+        
+        .completion-dot.current {
+            border: 2px solid #8b7355;
+            transform: scale(1.1);
+        }
+        
+        .completion-dot:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .completion-summary {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #795548;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
         @media (max-width: 768px) {
             .app-container {
                 flex-direction: column;
@@ -459,6 +539,12 @@
             
             .preview-parts {
                 grid-template-columns: 1fr;
+            }
+            
+            .completion-dot {
+                width: 25px;
+                height: 25px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -481,8 +567,8 @@
                 <li>填写你的姓名或昵称，开始回答问题</li>
                 <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
                 <li>在每个问题下方的文本框中写下你的答案</li>
-                <li>完成所有问题后，点击"生成四张图片"按钮保存你的年度回顾卡片</li>
-                <li>所有答案会自动保存到云端（Google Sheets）</li>
+                <li>完成所有问题后，点击"提交全部答案"按钮保存到云端</li>
+                <li>点击"生成四张图片"按钮保存你的年度回顾卡片</li>
             </ol>
         </div>
         
@@ -510,6 +596,20 @@
                         </div>
                     </div>
                     
+                    <!-- 新增：题目完成状态显示 -->
+                    <div class="completion-status">
+                        <div class="completion-title">
+                            <i class="fas fa-list-check"></i> 题目完成情况
+                        </div>
+                        <div class="completion-summary">
+                            <span>已答: <span id="answeredCount">0</span> 题</span>
+                            <span>未答: <span id="unansweredCount">40</span> 题</span>
+                        </div>
+                        <div class="completion-dots" id="completionDots">
+                            <!-- 40个圆点将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    
                     <div class="current-question">
                         <h3 id="currentQuestionText">请从左侧选择一个问题开始回答</h3>
                         <p class="handwritten-note">你的答案将以手写字体显示在生成的图片中</p>
@@ -519,14 +619,14 @@
                         <textarea id="answerInput" placeholder="在这里写下你的回答..."></textarea>
                         <div class="navigation-buttons">
                             <button id="prevBtn" disabled><i class="fas fa-arrow-left"></i> 上一题</button>
-                            <button id="saveBtn">保存答案</button>
+                            <button id="saveBtn">保存当前答案</button>
                             <button id="nextBtn" disabled>下一题 <i class="fas fa-arrow-right"></i></button>
                         </div>
                     </div>
                     
-                    <div>
-                        <button id="generateImageBtn" class="btn-secondary" disabled><i class="fas fa-image"></i> 生成四张年度回顾图片</button>
-                        <button id="viewAllAnswersBtn"><i class="fas fa-users"></i> 查看所有用户答案</button>
+                    <div class="action-buttons">
+                        <button id="submitAllBtn" class="btn-success" disabled><i class="fas fa-paper-plane"></i> 提交全部答案</button>
+                        <button id="generateImageBtn" class="btn-secondary" disabled><i class="fas fa-image"></i> 生成四张图片</button>
                     </div>
                     
                     <!-- 数据控制区域 -->
@@ -534,16 +634,12 @@
                         <h3><i class="fas fa-database"></i> 数据管理</h3>
                         <p style="margin-bottom: 10px; font-size: 0.9rem;">所有答案会自动保存到云端Google Sheets。你也可以手动操作：</p>
                         <div class="data-buttons">
-                            <button id="loadFromCloudBtn" class="btn-small"><i class="fas fa-cloud-download-alt"></i> 从云端加载</button>
                             <button id="backupToLocalBtn" class="btn-small"><i class="fas fa-save"></i> 备份到本地</button>
                             <button id="restoreFromLocalBtn" class="btn-small"><i class="fas fa-upload"></i> 从本地恢复</button>
                             <button id="clearLocalBtn" class="btn-small btn-secondary"><i class="fas fa-trash"></i> 清除本地数据</button>
-                            <button id="testConnectionBtn" class="btn-small" style="background-color: #2196F3;"><i class="fas fa-wifi"></i> 测试连接</button>
-                            <button id="exportToSheetsBtn" class="btn-small" style="background-color: #4CAF50;"><i class="fas fa-file-export"></i> 导出为CSV</button>
                         </div>
                         <div style="margin-top: 10px; font-size: 0.8rem; color: #795548;">
                             <i class="fas fa-info-circle"></i> 云端存储状态: <span id="cloudStatus">未连接</span>
-                            <span style="margin-left: 10px;">数据表: <a href="https://docs.google.com/spreadsheets/d/1mwloK9-aOUEWR7Mn9AHnfsW17I5BZ0gdv0xSuINg56g/edit" target="_blank" style="color: #8b7355;">查看</a></span>
                         </div>
                         
                         <!-- 调试信息区域 -->
@@ -555,11 +651,6 @@
                             <div class="debug-content" id="debugContent"></div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="answers-list" id="answersList">
-                    <h3 class="section-title"><i class="fas fa-comments"></i> 所有用户答案</h3>
-                    <!-- 用户答案将通过JavaScript动态生成 -->
                 </div>
             </div>
         </div>
@@ -658,21 +749,20 @@
         const startBtn = document.getElementById('startBtn');
         const userNameInput = document.getElementById('userName');
         const generateImageBtn = document.getElementById('generateImageBtn');
-        const viewAllAnswersBtn = document.getElementById('viewAllAnswersBtn');
+        const submitAllBtn = document.getElementById('submitAllBtn');
         const previewContainer = document.getElementById('previewContainer');
         const previewParts = document.getElementById('previewParts');
         const downloadAllBtn = document.getElementById('downloadAllBtn');
-        const answersList = document.getElementById('answersList');
         const progressText = document.getElementById('progressText');
         const progressFill = document.getElementById('progressFill');
         const notification = document.getElementById('notification');
         const cloudStatus = document.getElementById('cloudStatus');
-        const loadFromCloudBtn = document.getElementById('loadFromCloudBtn');
         const backupToLocalBtn = document.getElementById('backupToLocalBtn');
         const restoreFromLocalBtn = document.getElementById('restoreFromLocalBtn');
         const clearLocalBtn = document.getElementById('clearLocalBtn');
-        const testConnectionBtn = document.getElementById('testConnectionBtn');
-        const exportToSheetsBtn = document.getElementById('exportToSheetsBtn');
+        const answeredCountElement = document.getElementById('answeredCount');
+        const unansweredCountElement = document.getElementById('unansweredCount');
+        const completionDots = document.getElementById('completionDots');
         const debugInfo = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
 
@@ -707,71 +797,53 @@
             }, duration);
         }
 
-        // 测试云端连接
-        async function testCloudConnection() {
-            try {
-                showNotification('正在测试云端连接...', 'warning', 2000);
-                cloudStatus.textContent = '测试中...';
-                cloudStatus.style.color = '#ff9800';
+        // 初始化完成状态圆点
+        function initCompletionDots() {
+            completionDots.innerHTML = '';
+            
+            for (let i = 0; i < 40; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'completion-dot unanswered';
+                dot.textContent = i + 1;
+                dot.dataset.index = i;
                 
-                const testUrl = GOOGLE_SCRIPT_URL + '?action=test&timestamp=' + Date.now();
-                addDebugInfo(`发送测试请求到: ${testUrl}`);
+                dot.addEventListener('click', () => {
+                    currentUser.currentQuestionIndex = i;
+                    updateQuestionDisplay();
+                    updateCompletionDots();
+                });
                 
-                const response = await fetch(testUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
-                }
-                
-                const resultText = await response.text();
-                addDebugInfo(`测试响应原始文本: ${resultText.substring(0, 500)}`);
-                
-                // 尝试解析为JSON
-                let result;
-                try {
-                    result = JSON.parse(resultText);
-                    if (result.status === 'ok' || result.success) {
-                        cloudStatus.textContent = '已连接';
-                        cloudStatus.style.color = '#4caf50';
-                        showNotification('云端连接正常', 'success');
-                        return true;
-                    } else {
-                        cloudStatus.textContent = '响应异常';
-                        cloudStatus.style.color = '#ff9800';
-                        showNotification('云端响应异常: ' + (result.message || result.error), 'warning');
-                        return false;
-                    }
-                } catch (e) {
-                    // 不是JSON格式，检查文本内容
-                    if (resultText.includes('成功') || 
-                        resultText.includes('OK') || 
-                        resultText.includes('ok') || 
-                        resultText.includes('running')) {
-                        cloudStatus.textContent = '已连接';
-                        cloudStatus.style.color = '#4caf50';
-                        showNotification('云端连接正常', 'success');
-                        return true;
-                    } else if (resultText.includes('错误') || 
-                               resultText.includes('error') || 
-                               resultText.includes('Error')) {
-                        throw new Error('服务端错误: ' + resultText.substring(0, 200));
-                    } else {
-                        // 可能是HTML页面或其他内容
-                        cloudStatus.textContent = '响应异常';
-                        cloudStatus.style.color = '#ff9800';
-                        showNotification('云端响应格式异常', 'warning');
-                        console.log('响应内容:', resultText);
-                        return false;
-                    }
-                }
-                
-            } catch (error) {
-                addDebugInfo(`连接测试失败: ${error.message}`, 'error');
-                cloudStatus.textContent = '连接失败';
-                cloudStatus.style.color = '#f44336';
-                showNotification(`云端连接失败: ${error.message}`, 'error');
-                return false;
+                completionDots.appendChild(dot);
             }
+            
+            updateCompletionDots();
+        }
+
+        // 更新完成状态圆点
+        function updateCompletionDots() {
+            const dots = document.querySelectorAll('.completion-dot');
+            let answeredCount = 0;
+            
+            dots.forEach((dot, index) => {
+                const isAnswered = currentUser.answers[index] && currentUser.answers[index].trim() !== '';
+                const isCurrent = index === currentUser.currentQuestionIndex;
+                
+                if (isAnswered) {
+                    dot.className = 'completion-dot answered';
+                    answeredCount++;
+                } else {
+                    dot.className = 'completion-dot unanswered';
+                }
+                
+                if (isCurrent) {
+                    dot.classList.add('current');
+                } else {
+                    dot.classList.remove('current');
+                }
+            });
+            
+            answeredCountElement.textContent = answeredCount;
+            unansweredCountElement.textContent = 40 - answeredCount;
         }
 
         // 保存数据到Google Sheets（使用GET请求简化版）
@@ -813,7 +885,6 @@
                 }
                 
                 if (result.success || result.message) {
-                    showNotification('答案已保存到云端', 'success');
                     cloudStatus.textContent = '已连接';
                     cloudStatus.style.color = '#4caf50';
                     return { success: true, message: result.message || '数据已保存' };
@@ -825,108 +896,41 @@
                 addDebugInfo(`保存到云端失败: ${error.message}`, 'error');
                 cloudStatus.textContent = '保存失败';
                 cloudStatus.style.color = '#f44336';
-                showNotification('云端保存失败，已保存到本地', 'warning');
                 return { success: false, message: error.message };
             }
         }
 
-        // 从Google Sheets加载数据
-        async function loadFromGoogleSheets() {
-            try {
-                showNotification('正在从云端加载数据...', 'warning', 5000);
-                
-                const url = GOOGLE_SCRIPT_URL + '?action=getAll&nocache=' + Date.now();
-                addDebugInfo(`从云端加载数据: ${url}`);
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP错误: ${response.status}`);
+        // 提交所有答案
+        async function submitAllAnswers() {
+            const answeredCount = currentUser.answers.filter(a => a && a.trim() !== '').length;
+            
+            if (answeredCount < 40) {
+                const confirmSubmit = confirm(`您只完成了${answeredCount}/40个问题，确定要提交吗？未回答的问题将保持空白。`);
+                if (!confirmSubmit) {
+                    return;
                 }
-                
-                const resultText = await response.text();
-                addDebugInfo(`云端响应: ${resultText.substring(0, 200)}...`);
-                
-                let data;
-                try {
-                    data = JSON.parse(resultText);
-                } catch (e) {
-                    throw new Error('响应不是有效的JSON格式');
-                }
-                
-                if (data && Array.isArray(data)) {
-                    // 转换数据格式
-                    allUsers = data.map(item => ({
-                        name: item.name || '未知用户',
-                        answers: item.answers || [],
-                        timestamp: item.timestamp || new Date().toISOString(),
-                        completed: item.completed || 0
-                    }));
-                    
-                    // 保存到本地存储
-                    localStorage.setItem('annualReviewUsers', JSON.stringify(allUsers));
-                    
-                    // 更新显示
-                    displayAllAnswers();
-                    showNotification(`成功加载${data.length}个用户的答案`, 'success');
-                    cloudStatus.textContent = '已连接';
-                    cloudStatus.style.color = '#4caf50';
-                } else if (data.error) {
-                    throw new Error(data.error);
-                } else {
-                    showNotification('云端暂无数据', 'warning');
-                }
-            } catch (error) {
-                addDebugInfo(`从云端加载失败: ${error.message}`, 'error');
-                cloudStatus.textContent = '加载失败';
-                cloudStatus.style.color = '#f44336';
-                showNotification('从云端加载失败: ' + error.message, 'error');
             }
-        }
-
-        // 导出为CSV文件（备用方案）
-        function exportToCSV() {
+            
+            showNotification('正在提交所有答案到云端...', 'warning', 3000);
+            
             try {
-                // 创建CSV内容
-                let csvContent = "时间戳,用户名,完成数量";
+                const result = await saveToGoogleSheets();
                 
-                // 添加问题标题
-                for (let i = 1; i <= 40; i++) {
-                    csvContent += `,问题${i}`;
+                if (result.success) {
+                    showNotification('所有答案已成功提交到云端！', 'success');
+                    
+                    // 提交成功后，启用生成图片按钮
+                    generateImageBtn.disabled = false;
+                    
+                    // 禁用提交按钮，避免重复提交
+                    submitAllBtn.disabled = true;
+                    submitAllBtn.innerHTML = '<i class="fas fa-check"></i> 已提交';
+                    submitAllBtn.style.backgroundColor = '#689f38';
+                } else {
+                    showNotification('提交失败: ' + result.message, 'error');
                 }
-                csvContent += "\n";
-                
-                // 添加当前用户数据
-                const timestamp = new Date().toLocaleString('zh-CN');
-                const completed = currentUser.answers.filter(a => a.trim() !== '').length;
-                
-                // 转义用户名中的特殊字符
-                const escapedName = currentUser.name.replace(/"/g, '""');
-                csvContent += `"${timestamp}","${escapedName}",${completed}`;
-                
-                // 添加40个答案
-                for (let i = 0; i < 40; i++) {
-                    const answer = currentUser.answers[i] || '';
-                    // 转义答案中的特殊字符
-                    const escapedAnswer = answer.replace(/"/g, '""').replace(/\n/g, '\\n');
-                    csvContent += `,"${escapedAnswer}"`;
-                }
-                
-                // 创建下载链接
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `${currentUser.name}_年度回顾_${new Date().toISOString().split('T')[0]}.csv`;
-                link.click();
-                
-                URL.revokeObjectURL(link.href);
-                
-                showNotification('数据已导出为CSV文件，可手动导入到Google Sheets', 'success');
-                addDebugInfo('导出CSV文件成功');
-                
             } catch (error) {
-                addDebugInfo(`导出CSV失败: ${error.message}`, 'error');
-                showNotification('导出CSV文件失败: ' + error.message, 'error');
+                showNotification('提交失败，请重试: ' + error.message, 'error');
             }
         }
 
@@ -944,13 +948,13 @@
                 questionItem.addEventListener('click', () => {
                     currentUser.currentQuestionIndex = index;
                     updateQuestionDisplay();
-                    highlightCurrentQuestion();
+                    updateCompletionDots();
                 });
                 
                 questionsList.appendChild(questionItem);
             });
             
-            highlightCurrentQuestion();
+            updateCompletionDots();
         }
 
         // 高亮当前问题
@@ -976,9 +980,17 @@
             
             const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
             const allAnswered = answeredCount === questions.length;
+            
+            // 更新进度条
+            updateProgress(answeredCount);
+            
+            // 更新完成状态圆点
+            updateCompletionDots();
+            
+            // 启用/禁用按钮
+            submitAllBtn.disabled = answeredCount === 0;
             generateImageBtn.disabled = !allAnswered;
             
-            updateProgress(answeredCount);
             highlightCurrentQuestion();
             saveUserProgress();
         }
@@ -998,12 +1010,8 @@
             // 保存到本地
             saveUserProgress();
             
-            // 尝试保存到Google Sheets
-            try {
-                await saveToGoogleSheets();
-            } catch (error) {
-                console.error('云端保存失败，但已保存到本地:', error);
-            }
+            // 更新完成状态
+            updateCompletionDots();
             
             const originalText = saveBtn.textContent;
             saveBtn.innerHTML = '<i class="fas fa-check"></i> 已保存';
@@ -1011,7 +1019,7 @@
             
             setTimeout(() => {
                 saveBtn.textContent = originalText;
-                saveBtn.innerHTML = '保存答案';
+                saveBtn.innerHTML = '保存当前答案';
                 saveBtn.style.backgroundColor = '';
             }, 1000);
             
@@ -1041,6 +1049,7 @@
             if (savedProgress) {
                 currentUser = JSON.parse(savedProgress);
                 updateQuestionDisplay();
+                initCompletionDots();
                 addDebugInfo(`加载用户进度: ${currentUser.name}`);
             }
         }
@@ -1059,6 +1068,7 @@
             }
             
             updateQuestionDisplay();
+            initCompletionDots();
             startBtn.disabled = true;
             userNameInput.disabled = true;
             
@@ -1239,7 +1249,12 @@
             previewContainer.scrollIntoView({ behavior: 'smooth' });
             
             // 保存用户到云端
-            saveToGoogleSheets();
+            saveToGoogleSheets().then(result => {
+                if (result.success) {
+                    showNotification('数据已保存到云端', 'success');
+                }
+            });
+            
             addDebugInfo(`生成图片: ${currentUser.name}`);
         }
 
@@ -1272,55 +1287,6 @@
                     item.generator();
                 }, item.delay);
             });
-        }
-
-        // 显示所有用户答案
-        function displayAllAnswers() {
-            answersList.innerHTML = '<h3 class="section-title"><i class="fas fa-comments"></i> 所有用户答案</h3>';
-            
-            if (allUsers.length === 0) {
-                answersList.innerHTML += '<p style="text-align: center; padding: 20px; color: #795548;">还没有用户保存答案，请完成回答并生成图片。</p>';
-                return;
-            }
-            
-            const userList = document.createElement('div');
-            userList.className = 'user-list';
-            
-            allUsers.forEach(user => {
-                const userTag = document.createElement('div');
-                userTag.className = 'user-tag';
-                userTag.innerHTML = `<i class="fas fa-user"></i> ${user.name}`;
-                userList.appendChild(userTag);
-            });
-            
-            answersList.appendChild(userList);
-            
-            allUsers.forEach(user => {
-                const answerEntry = document.createElement('div');
-                answerEntry.className = 'answer-entry';
-                
-                const answerCount = user.answers.filter(answer => answer.trim() !== "").length;
-                
-                answerEntry.innerHTML = `
-                    <div class="answer-header">
-                        <span><i class="fas fa-user"></i> ${user.name}</span>
-                        <span>已回答: ${answerCount}/40</span>
-                    </div>
-                    <div class="answer-text">
-                        <strong>年度总结:</strong> ${user.answers[29] ? (user.answers[29].length > 100 ? user.answers[29].substring(0, 100) + '...' : user.answers[29]) : '（未回答）'}
-                    </div>
-                `;
-                
-                answersList.appendChild(answerEntry);
-            });
-        }
-
-        // 查看所有用户答案
-        function viewAllAnswers() {
-            allUsers = JSON.parse(localStorage.getItem('annualReviewUsers')) || [];
-            displayAllAnswers();
-            answersList.scrollIntoView({ behavior: 'smooth' });
-            addDebugInfo(`查看所有用户答案: ${allUsers.length}个用户`);
         }
 
         // 备份到本地
@@ -1365,12 +1331,12 @@
                                 currentUser = data.currentUser;
                                 saveUserProgress();
                                 updateQuestionDisplay();
+                                initCompletionDots();
                             }
                             
                             if (data.allUsers) {
                                 allUsers = data.allUsers;
                                 localStorage.setItem('annualReviewUsers', JSON.stringify(allUsers));
-                                displayAllAnswers();
                             }
                             
                             showNotification('数据恢复成功', 'success');
@@ -1399,7 +1365,7 @@
                 };
                 allUsers = [];
                 updateQuestionDisplay();
-                displayAllAnswers();
+                initCompletionDots();
                 startBtn.disabled = false;
                 userNameInput.disabled = false;
                 showNotification('本地数据已清除', 'success');
@@ -1413,6 +1379,7 @@
                 if (currentUser.currentQuestionIndex > 0) {
                     currentUser.currentQuestionIndex--;
                     updateQuestionDisplay();
+                    updateCompletionDots();
                 }
             });
 
@@ -1420,6 +1387,7 @@
                 if (currentUser.currentQuestionIndex < questions.length - 1) {
                     currentUser.currentQuestionIndex++;
                     updateQuestionDisplay();
+                    updateCompletionDots();
                 }
             });
 
@@ -1434,8 +1402,8 @@
             });
 
             generateImageBtn.addEventListener('click', generateImages);
-
-            viewAllAnswersBtn.addEventListener('click', viewAllAnswers);
+            
+            submitAllBtn.addEventListener('click', submitAllAnswers);
 
             downloadAllBtn.addEventListener('click', downloadAllImages);
             
@@ -1448,30 +1416,22 @@
             });
             
             // 数据管理按钮
-            loadFromCloudBtn.addEventListener('click', loadFromGoogleSheets);
             backupToLocalBtn.addEventListener('click', backupToLocal);
             restoreFromLocalBtn.addEventListener('click', restoreFromLocal);
             clearLocalBtn.addEventListener('click', clearLocalData);
-            testConnectionBtn.addEventListener('click', testCloudConnection);
-            exportToSheetsBtn.addEventListener('click', exportToCSV);
         }
 
         // 初始化应用
         function initApp() {
             initQuestionsList();
+            initCompletionDots();
             initEventListeners();
             loadUserProgress();
-            displayAllAnswers();
             
             if (localStorage.getItem('currentUserProgress')) {
                 startBtn.disabled = true;
                 userNameInput.disabled = true;
             }
-            
-            // 测试云端连接
-            setTimeout(() => {
-                testCloudConnection();
-            }, 1000);
             
             addDebugInfo('应用初始化完成');
         }
