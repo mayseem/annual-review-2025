@@ -178,6 +178,7 @@
             flex: 1;
             min-width: 100%;
             -webkit-appearance: none;
+            touch-action: manipulation;
         }
         
         @media (min-width: 768px) {
@@ -210,6 +211,11 @@
             resize: vertical;
             background-color: #fffefc;
             -webkit-appearance: none;
+            touch-action: manipulation;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
         
         .navigation-buttons {
@@ -238,6 +244,7 @@
             transition: background-color 0.3s;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            min-height: 44px; /* 移动端最小触摸区域 */
         }
         
         button:hover {
@@ -383,6 +390,7 @@
             cursor: pointer;
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .completion-dot.answered {
@@ -531,6 +539,7 @@
             justify-content: center;
             padding: 20px;
             box-sizing: border-box;
+            touch-action: pan-x pan-y;
         }
         
         .image-preview img {
@@ -552,11 +561,13 @@
             background: none;
             border: none;
             z-index: 2001;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .image-preview-download {
@@ -569,6 +580,9 @@
             cursor: pointer;
             font-size: 1rem;
             font-weight: 600;
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         
         .image-preview-instruction {
@@ -583,15 +597,6 @@
             color: white;
             font-size: 1.2rem;
             margin-bottom: 20px;
-        }
-        
-        /* 按钮通用样式 */
-        .btn-primary {
-            background-color: #8b7355;
-        }
-        
-        .btn-primary:hover {
-            background-color: #6b5842;
         }
         
         /* 移动端优化 */
@@ -620,6 +625,28 @@
                 width: 25px;
                 height: 25px;
                 font-size: 0.8rem;
+            }
+            
+            /* 移动端触摸优化 */
+            .question-item {
+                padding: 10px;
+                margin-bottom: 8px;
+            }
+            
+            textarea {
+                padding: 12px;
+                font-size: 16px; /* 防止iOS自动缩放 */
+            }
+            
+            button, input, textarea {
+                font-size: 16px; /* 防止iOS自动缩放 */
+            }
+        }
+        
+        /* 防止移动端缩放 */
+        @media (max-width: 767px) {
+            input, textarea {
+                font-size: 16px !important;
             }
         }
     </style>
@@ -653,7 +680,7 @@
                 <li>填写你的姓名或昵称，开始回答问题</li>
                 <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
                 <li>在每个问题下方的文本框中写下你的答案</li>
-                <li>完成所有问题后，点击"生成四张图片"按钮将答案保存到云端并生成图片</li>
+                <li>完成所有问题后，系统会自动提交答案，然后显示"生成年度图片"按钮</li>
                 <li><strong>手机用户：</strong>生成图片后，可以点击预览中的"查看图片"按钮，然后长按图片保存</li>
             </ol>
         </div>
@@ -712,7 +739,7 @@
                     
                     <div class="action-buttons">
                         <button id="clearLocalBtn" class="btn-danger"><i class="fas fa-trash"></i> 清空本地答案</button>
-                        <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成四张图片并提交答案</button>
+                        <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成年度图片</button>
                     </div>
                 </div>
             </div>
@@ -827,6 +854,9 @@
         const imagePreviewDownload = document.getElementById('imagePreviewDownload');
         const imagePreviewLoading = document.getElementById('imagePreviewLoading');
         const previewInstruction = document.getElementById('previewInstruction');
+
+        // 是否已自动提交的标记
+        let hasAutoSubmitted = false;
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -993,11 +1023,44 @@
             // 更新完成状态圆点
             updateCompletionDots();
             
-            // 启用/禁用生成图片按钮
+            // 如果所有题目都已完成且是第40题，并且还没有自动提交过
+            if (allAnswered && questionIndex === 39 && !hasAutoSubmitted) {
+                // 自动提交
+                autoSubmitAfterCompletion();
+            }
+            
+            // 如果所有题目都已完成，启用生成图片按钮
             generateImageBtn.disabled = !allAnswered;
             
             highlightCurrentQuestion();
             saveUserProgress();
+        }
+
+        // 自动提交完成后启用生成图片按钮
+        async function autoSubmitAfterCompletion() {
+            showNotification('所有题目已完成，正在提交答案到云端...', 'warning', 3000);
+            
+            try {
+                const result = await saveToGoogleSheets();
+                
+                if (result.success) {
+                    showNotification('答案已成功提交到云端！现在可以生成年度图片了', 'success');
+                    hasAutoSubmitted = true;
+                    
+                    // 更新按钮文本
+                    generateImageBtn.innerHTML = '<i class="fas fa-image"></i> 生成年度图片';
+                    generateImageBtn.disabled = false;
+                    
+                    // 滚动到生成图片按钮
+                    setTimeout(() => {
+                        generateImageBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 500);
+                } else {
+                    showNotification('自动提交失败，请手动点击生成图片按钮重试', 'error');
+                }
+            } catch (error) {
+                showNotification('自动提交失败，请手动点击生成图片按钮重试', 'error');
+            }
         }
 
         // 更新进度
@@ -1030,6 +1093,14 @@
             
             const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
             updateProgress(answeredCount);
+            
+            // 如果保存的是第40题且所有题目都已完成，检查是否需要自动提交
+            if (currentUser.currentQuestionIndex === 39) {
+                const allAnswered = answeredCount === questions.length;
+                if (allAnswered && !hasAutoSubmitted) {
+                    autoSubmitAfterCompletion();
+                }
+            }
         }
 
         // 保存用户进度到本地存储
@@ -1052,6 +1123,7 @@
             if (confirm('确定要清空所有本地答案吗？此操作不可撤销。')) {
                 currentUser.answers = new Array(40).fill("");
                 currentUser.currentQuestionIndex = 0;
+                hasAutoSubmitted = false;
                 
                 // 清除本地存储
                 localStorage.removeItem('currentUserProgress');
@@ -1063,6 +1135,10 @@
                 // 启用用户输入
                 startBtn.disabled = false;
                 userNameInput.disabled = false;
+                
+                // 重置生成图片按钮
+                generateImageBtn.disabled = true;
+                generateImageBtn.innerHTML = '<i class="fas fa-image"></i> 生成年度图片';
                 
                 showNotification('本地答案已清空', 'success');
             }
@@ -1119,11 +1195,6 @@
 
         // 下载图片（兼容移动端）
         function downloadImage(imageDataUrl, filename) {
-            // 创建临时链接
-            const link = document.createElement('a');
-            link.href = imageDataUrl;
-            link.download = filename;
-            
             // 对于移动设备，使用新窗口打开
             if (isMobileDevice()) {
                 const newWindow = window.open();
@@ -1134,11 +1205,22 @@
             }
             
             // 对于桌面设备，尝试直接下载
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            return true;
+            try {
+                // 创建临时链接
+                const link = document.createElement('a');
+                link.href = imageDataUrl;
+                link.download = filename;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                return true;
+            } catch (error) {
+                console.error('下载失败:', error);
+                return false;
+            }
         }
 
         // 计算答案的最佳字体大小
@@ -1156,7 +1238,7 @@
             tempElement.style.fontFamily = "'Ma Shan Zheng', cursive";
             tempElement.style.whiteSpace = 'pre-wrap';
             tempElement.style.wordWrap = 'break-word';
-            tempElement.style.lineHeight = '1.3';
+            tempElement.style.lineHeight = '1.35';
             tempElement.style.padding = '5px';
             tempElement.textContent = answer;
             document.body.appendChild(tempElement);
@@ -1183,7 +1265,7 @@
             return isFit ? fontSize : minFontSize;
         }
 
-        // 生成单张图片 - 使用固定尺寸和布局，在两条横线之间平均分配10个部分
+        // 生成单张图片 - 答案与题目中的第一个字对齐
         function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
             return new Promise((resolve, reject) => {
                 // 固定图片尺寸
@@ -1255,10 +1337,15 @@
                     const answerFontSize = calculateOptimalFontSize(
                         answer, 
                         answerRowHeight - 20, // 减去内边距
-                        contentWidth - 60,    // 减去左侧编号和边距
+                        contentWidth - 55,    // 减去左边距
                         22,                   // 最大字体
                         10                    // 最小字体
                     );
+                    
+                    // 获取问题文本的第一行的起始位置
+                    // 问题编号宽度为40px + 右边距15px = 55px
+                    // 问题文本从这个位置开始
+                    const questionStartPosition = 55; // 问题文本起始位置
                     
                     contentHTML += `
                         <div style="position: absolute; top: ${sectionTop}px; left: 0; right: 0; height: ${sectionHeight}px;">
@@ -1267,13 +1354,13 @@
                                 <div style="flex-shrink: 0; margin-right: 15px;">
                                     <span style="background-color: #8b7355; color: white; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">${questionNumber}</span>
                                 </div>
-                                <div style="flex-grow: 1;">
-                                    <div style="font-size: 20px; color: #5d4037; font-weight: bold; line-height: 1.3;">${question}</div>
+                                <div style="flex-grow: 1; padding-left: 0; margin-left: 0;">
+                                    <div style="font-size: 20px; color: #5d4037; font-weight: bold; line-height: 1.3; padding-left: 0; margin-left: 0;">${question}</div>
                                 </div>
                             </div>
                             
-                            <!-- 答案行 -->
-                            <div style="height: ${answerRowHeight}px; padding: 5px 0 10px 55px; overflow: hidden;">
+                            <!-- 答案行 - 与问题文本第一个字对齐 -->
+                            <div style="height: ${answerRowHeight}px; padding: 5px 0 10px ${questionStartPosition}px; overflow: hidden;">
                                 <div style="font-size: ${answerFontSize}px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word; height: 100%; overflow: hidden;">
                                     ${answer}
                                 </div>
@@ -1299,9 +1386,12 @@
                 
                 // 给时间让内容渲染
                 setTimeout(() => {
+                    // 根据设备类型调整scale
+                    const scale = isMobileDevice() ? 1 : 2;
+                    
                     // 设置html2canvas参数
                     const options = {
-                        scale: 2,
+                        scale: scale,
                         backgroundColor: '#fffefc',
                         useCORS: true,
                         logging: false,
@@ -1323,12 +1413,12 @@
                     
                     html2canvas(tempContainer, options).then(canvas => {
                         // 确保画布尺寸正确
-                        if (canvas.width !== width * 2 || canvas.height !== height * 2) {
+                        if (canvas.width !== width * scale || canvas.height !== height * scale) {
                             const finalCanvas = document.createElement('canvas');
-                            finalCanvas.width = width * 2;
-                            finalCanvas.height = height * 2;
+                            finalCanvas.width = width * scale;
+                            finalCanvas.height = height * scale;
                             const ctx = finalCanvas.getContext('2d');
-                            ctx.drawImage(canvas, 0, 0, width * 2, height * 2);
+                            ctx.drawImage(canvas, 0, 0, width * scale, height * scale);
                             
                             // 生成JPG格式图片，质量为0.9
                             const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
@@ -1349,8 +1439,8 @@
             });
         }
 
-        // 生成图片并提交答案
-        async function generateImagesAndSubmit() {
+        // 生成图片
+        async function generateImages() {
             const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 800);
             if (hasLongAnswer) {
                 if (!confirm('检测到部分答案较长，系统将自动调整字体大小以确保所有内容都能放入图片中。是否继续生成图片？')) {
@@ -1358,26 +1448,10 @@
                 }
             }
             
-            // 显示提交中的通知
-            showNotification('正在提交答案到云端...', 'warning', 3000);
+            // 显示生成图片中的通知
+            showNotification('正在生成年度图片，请稍候...', 'warning', 5000);
             
             try {
-                // 先提交答案到云端
-                const result = await saveToGoogleSheets();
-                
-                if (!result.success) {
-                    const continueWithoutSave = confirm('提交到云端失败，是否继续生成图片？生成的图片将只保存在本地。');
-                    if (!continueWithoutSave) {
-                        return;
-                    }
-                    showNotification('云端保存失败，继续生成本地图片', 'warning');
-                } else {
-                    showNotification('答案已成功提交到云端！', 'success');
-                }
-                
-                // 显示生成图片中的通知
-                showNotification('正在生成图片，请稍候...', 'warning', 5000);
-                
                 // 清空之前的图片数据
                 generatedImages = [];
                 
@@ -1405,8 +1479,8 @@
                             filename: `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`
                         });
                         
-                        // 每张图片生成后稍微延迟，避免内存问题
-                        await new Promise(resolve => setTimeout(resolve, 500));
+                        // 每张图片生成后稍微延迟，避免内存问题（移动端需要更长时间）
+                        await new Promise(resolve => setTimeout(resolve, isMobileDevice() ? 800 : 500));
                     } catch (error) {
                         showNotification(`第${partIndex + 1}部分生成失败: ${error.message}`, 'error');
                         continue;
@@ -1486,7 +1560,7 @@
             });
             
             previewContainer.scrollIntoView({ behavior: 'smooth' });
-            showNotification('图片生成完成！', 'success');
+            showNotification('年度图片生成完成！', 'success');
         }
 
         // 下载所有图片
@@ -1558,7 +1632,7 @@
                 }
             });
 
-            generateImageBtn.addEventListener('click', generateImagesAndSubmit);
+            generateImageBtn.addEventListener('click', generateImages);
 
             downloadAllBtn.addEventListener('click', downloadAllImages);
             
@@ -1605,6 +1679,26 @@
                 }
                 lastTouchEnd = now;
             }, false);
+            
+            // 移动端优化：点击输入框时不放大
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    // 移动端禁用缩放
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                });
+                
+                input.addEventListener('blur', () => {
+                    // 恢复默认viewport
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                });
+            });
+            
+            // 移动端优化：增加触摸区域
+            const touchElements = document.querySelectorAll('button, .question-item, .completion-dot');
+            touchElements.forEach(el => {
+                el.style.cursor = 'pointer';
+            });
         }
 
         // 初始化应用
