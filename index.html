@@ -77,13 +77,18 @@
         
         .app-container {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+            }
         }
         
         .questions-section {
             flex: 1;
-            min-width: 100%;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
@@ -92,7 +97,6 @@
         
         .answers-section {
             flex: 2;
-            min-width: 100%;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
@@ -176,6 +180,12 @@
             -webkit-appearance: none;
         }
         
+        @media (min-width: 768px) {
+            .user-info input {
+                min-width: 200px;
+            }
+        }
+        
         .current-question {
             background-color: #f5f0eb;
             padding: 15px;
@@ -204,9 +214,16 @@
         
         .navigation-buttons {
             display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
+            flex-direction: column;
             gap: 10px;
+            margin-top: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .navigation-buttons {
+                flex-direction: row;
+                justify-content: space-between;
+            }
         }
         
         button {
@@ -289,8 +306,8 @@
         .notification {
             position: fixed;
             top: 20px;
-            right: 20px;
-            left: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             padding: 15px 20px;
             background-color: #4caf50;
             color: white;
@@ -299,6 +316,19 @@
             z-index: 1000;
             display: none;
             text-align: center;
+            max-width: 90%;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
         }
         
         .notification.error {
@@ -402,11 +432,25 @@
             align-items: center;
         }
         
+        @media (min-width: 768px) {
+            .preview-title {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+        
         .preview-parts {
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-top: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .preview-parts {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
         }
         
         .preview-part {
@@ -444,6 +488,13 @@
             gap: 10px;
         }
         
+        @media (min-width: 768px) {
+            .part-footer {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+        
         .download-instruction {
             font-size: 0.8rem;
             color: #795548;
@@ -465,29 +516,39 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.95);
             z-index: 2000;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
         
         .image-preview img {
-            max-width: 95%;
-            max-height: 80%;
+            max-width: 100%;
+            max-height: 70vh;
             object-fit: contain;
+            border: 2px solid white;
+            border-radius: 5px;
+            background-color: white;
         }
         
         .image-preview-close {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             color: white;
             font-size: 30px;
             cursor: pointer;
             background: none;
             border: none;
             z-index: 2001;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .image-preview-download {
@@ -507,48 +568,35 @@
             margin-top: 15px;
             text-align: center;
             padding: 0 20px;
+            font-size: 0.9rem;
         }
         
-        /* 手机端特定样式 */
-        @media (min-width: 768px) {
-            .app-container {
-                flex-direction: row;
-            }
-            
-            .questions-section, .answers-section {
-                min-width: auto;
-            }
-            
-            .questions-section {
-                flex: 1;
-            }
-            
-            .answers-section {
-                flex: 2;
-            }
-            
-            .preview-parts {
-                grid-template-columns: repeat(2, 1fr);
-                display: grid;
-            }
-            
-            .preview-title {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
+        .image-preview-loading {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
         }
         
+        /* 按钮通用样式 */
+        .btn-primary {
+            background-color: #8b7355;
+        }
+        
+        .btn-primary:hover {
+            background-color: #6b5842;
+        }
+        
+        /* 移动端优化 */
         @media (max-width: 767px) {
-            .navigation-buttons {
-                flex-direction: column;
-            }
-            
             .navigation-buttons button {
                 width: 100%;
             }
             
             .action-buttons button {
+                width: 100%;
+            }
+            
+            .part-footer button {
                 width: 100%;
             }
             
@@ -574,10 +622,11 @@
     
     <!-- 图片预览区域 -->
     <div id="imagePreview" class="image-preview">
+        <div class="image-preview-loading" id="imagePreviewLoading">正在加载图片...</div>
         <button id="imagePreviewClose" class="image-preview-close">&times;</button>
-        <img id="previewImage" alt="预览图片">
-        <button id="imagePreviewDownload" class="image-preview-download">下载图片</button>
-        <div class="image-preview-instruction">
+        <img id="previewImage" alt="预览图片" style="display:none;">
+        <button id="imagePreviewDownload" class="image-preview-download" style="display:none;">下载图片</button>
+        <div class="image-preview-instruction" id="previewInstruction" style="display:none;">
             如果无法下载，请长按图片选择"保存图片"
         </div>
     </div>
@@ -654,7 +703,7 @@
                     </div>
                     
                     <div class="action-buttons">
-                        <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成四张图片 </button>
+                        <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成四张图片并提交答案</button>
                     </div>
                 </div>
             </div>
@@ -663,7 +712,7 @@
         <div class="preview-container" id="previewContainer">
             <div class="preview-title">
                 <span><i class="fas fa-file-image"></i> 年度回顾卡片（共4部分）</span>
-                <button id="downloadAllBtn"><i class="fas fa-download"></i> 一键下载全部</button>
+                <button id="downloadAllBtn" class="btn-primary"><i class="fas fa-download"></i> 一键下载全部</button>
             </div>
             <div class="preview-parts" id="previewParts">
                 <!-- 4个部分将通过JavaScript动态生成 -->
@@ -674,7 +723,8 @@
         </div>
         
         <footer>
-            <p>© 2025 年度回顾反思 | HiHeart </p>
+            <p>© 2025 年度回顾反思 | 设计灵感来自年度反思问题列表</p>
+            <p>提示：所有答案会自动保存到云端Google Sheets，生成的图片为JPG格式</p>
         </footer>
     </div>
 
@@ -765,6 +815,8 @@
         const previewImage = document.getElementById('previewImage');
         const imagePreviewClose = document.getElementById('imagePreviewClose');
         const imagePreviewDownload = document.getElementById('imagePreviewDownload');
+        const imagePreviewLoading = document.getElementById('imagePreviewLoading');
+        const previewInstruction = document.getElementById('previewInstruction');
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -998,16 +1050,40 @@
 
         // 显示图片预览
         function showImagePreview(imageDataUrl, partIndex) {
+            // 显示加载中
+            imagePreview.style.display = 'flex';
+            imagePreviewLoading.style.display = 'block';
+            previewImage.style.display = 'none';
+            imagePreviewDownload.style.display = 'none';
+            previewInstruction.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            
+            // 设置图片源
             previewImage.src = imageDataUrl;
             previewImage.dataset.part = partIndex;
-            imagePreview.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            
+            // 图片加载完成后显示
+            previewImage.onload = function() {
+                imagePreviewLoading.style.display = 'none';
+                previewImage.style.display = 'block';
+                imagePreviewDownload.style.display = 'block';
+                previewInstruction.style.display = 'block';
+            };
+            
+            // 图片加载失败
+            previewImage.onerror = function() {
+                imagePreviewLoading.textContent = '图片加载失败，请重试';
+                setTimeout(() => {
+                    closeImagePreview();
+                }, 2000);
+            };
         }
 
         // 关闭图片预览
         function closeImagePreview() {
             imagePreview.style.display = 'none';
             document.body.style.overflow = 'auto';
+            previewImage.src = '';
         }
 
         // 下载图片（兼容移动端）
@@ -1034,15 +1110,15 @@
             return true;
         }
 
-        // 生成单张图片
+        // 生成单张图片 - 修复移动端问题
         function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
             return new Promise((resolve, reject) => {
                 const totalChars = answersSubset.reduce((total, answer) => total + (answer || "").length, 0);
                 
                 // 根据设备类型调整图片尺寸
                 const isMobile = isMobileDevice();
-                const width = isMobile ? 750 : 1080; // 移动端使用750px宽度
-                const height = isMobile ? 1334 : 1920; // 移动端使用1334px高度
+                const width = isMobile ? 750 : 1080;
+                const height = isMobile ? 1334 : 1920;
                 
                 let baseFontSize;
                 if (totalChars > 10000) baseFontSize = isMobile ? 12 : 14;
@@ -1061,12 +1137,13 @@
                 tempContainer.style.backgroundColor = '#fffefc';
                 tempContainer.style.color = '#3e2723';
                 tempContainer.style.lineHeight = '1.4';
-                tempContainer.style.position = 'absolute';
+                tempContainer.style.position = 'fixed';
                 tempContainer.style.left = '-9999px';
                 tempContainer.style.top = '0';
                 tempContainer.style.overflow = 'hidden';
                 tempContainer.style.boxSizing = 'border-box';
                 tempContainer.style.fontSize = `${baseFontSize}px`;
+                tempContainer.style.zIndex = '-9999';
                 document.body.appendChild(tempContainer);
                 
                 let contentHTML = `
@@ -1111,50 +1188,56 @@
                 
                 tempContainer.innerHTML = contentHTML;
                 
-                // 设置html2canvas参数
-                const options = {
-                    scale: isMobile ? 1.5 : 2, // 移动端使用较低的scale减少内存使用
-                    backgroundColor: '#fffefc',
-                    useCORS: true,
-                    logging: false,
-                    width: width,
-                    height: height,
-                    windowWidth: width,
-                    windowHeight: height,
-                    onclone: function(clonedDoc) {
-                        // 确保字体加载
-                        const style = clonedDoc.createElement('style');
-                        style.textContent = `
-                            @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
-                        `;
-                        clonedDoc.head.appendChild(style);
-                    }
-                };
-                
-                html2canvas(tempContainer, options).then(canvas => {
-                    // 确保画布尺寸正确
-                    if (canvas.width !== width || canvas.height !== height) {
-                        const finalCanvas = document.createElement('canvas');
-                        finalCanvas.width = width;
-                        finalCanvas.height = height;
-                        const ctx = finalCanvas.getContext('2d');
-                        ctx.drawImage(canvas, 0, 0, width, height);
-                        
-                        // 生成JPG格式图片，质量为0.85
-                        const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
-                        resolve(imageDataUrl);
-                    } else {
-                        // 生成JPG格式图片，质量为0.85
-                        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                        resolve(imageDataUrl);
-                    }
+                // 给时间让内容渲染
+                setTimeout(() => {
+                    // 设置html2canvas参数
+                    const options = {
+                        scale: isMobile ? 1 : 2, // 移动端使用1倍scale减少内存使用
+                        backgroundColor: '#fffefc',
+                        useCORS: true,
+                        logging: false,
+                        width: width,
+                        height: height,
+                        windowWidth: width,
+                        windowHeight: height,
+                        allowTaint: true,
+                        useCORS: true,
+                        onclone: function(clonedDoc) {
+                            // 确保字体加载
+                            const style = clonedDoc.createElement('style');
+                            style.textContent = `
+                                @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+                                * { -webkit-font-smoothing: antialiased; }
+                            `;
+                            clonedDoc.head.appendChild(style);
+                        }
+                    };
                     
-                    document.body.removeChild(tempContainer);
-                }).catch(error => {
-                    console.error('生成图片时出错:', error);
-                    document.body.removeChild(tempContainer);
-                    reject(error);
-                });
+                    html2canvas(tempContainer, options).then(canvas => {
+                        // 确保画布尺寸正确
+                        if (canvas.width !== width || canvas.height !== height) {
+                            const finalCanvas = document.createElement('canvas');
+                            finalCanvas.width = width;
+                            finalCanvas.height = height;
+                            const ctx = finalCanvas.getContext('2d');
+                            ctx.drawImage(canvas, 0, 0, width, height);
+                            
+                            // 生成JPG格式图片，质量为0.85
+                            const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
+                            resolve(imageDataUrl);
+                        } else {
+                            // 生成JPG格式图片，质量为0.85
+                            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                            resolve(imageDataUrl);
+                        }
+                        
+                        document.body.removeChild(tempContainer);
+                    }).catch(error => {
+                        console.error('生成图片时出错:', error);
+                        document.body.removeChild(tempContainer);
+                        reject(error);
+                    });
+                }, 100);
             });
         }
 
@@ -1205,6 +1288,7 @@
                     const partAnswers = currentUser.answers.slice(startIdx, endIdx);
                     
                     try {
+                        showNotification(`正在生成第${partIndex + 1}/4部分...`, 'warning', 2000);
                         const imageDataUrl = await generateSingleImage(partIndex, partTitles[partIndex], partQuestions, partAnswers);
                         generatedImages.push({
                             index: partIndex,
@@ -1212,6 +1296,9 @@
                             dataUrl: imageDataUrl,
                             filename: `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`
                         });
+                        
+                        // 每张图片生成后稍微延迟，避免内存问题
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (error) {
                         showNotification(`第${partIndex + 1}部分生成失败: ${error.message}`, 'error');
                         continue;
@@ -1262,10 +1349,10 @@
                     <div class="part-header">${image.title}${partHasLongAnswer ? ' (含长答案)' : ''}</div>
                     <div class="part-content">${previewHTML}</div>
                     <div class="part-footer">
-                        <button class="view-image-btn" data-index="${index}">
+                        <button class="view-image-btn btn-primary" data-index="${index}">
                             <i class="fas fa-eye"></i> 查看图片
                         </button>
-                        <button class="download-single-btn" data-index="${index}">
+                        <button class="download-single-btn btn-success" data-index="${index}">
                             <i class="fas fa-download"></i> 下载图片
                         </button>
                     </div>
