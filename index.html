@@ -256,6 +256,14 @@
             cursor: not-allowed;
         }
         
+        .btn-primary {
+            background-color: #2196F3;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0b7dda;
+        }
+        
         .btn-secondary {
             background-color: #a1887f;
         }
@@ -680,7 +688,8 @@
                 <li>填写你的姓名或昵称，开始回答问题</li>
                 <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
                 <li>在每个问题下方的文本框中写下你的答案</li>
-                <li>完成所有问题后，系统会自动提交答案，然后显示"生成年度图片"按钮</li>
+                <li><strong>完成所有问题后，点击"提交答案"按钮将数据保存到云端</strong></li>
+                <li><strong>提交成功后，才能点击"生成年度图片"按钮生成图片</strong></li>
                 <li><strong>手机用户：</strong>生成图片后，可以点击预览中的"查看图片"按钮，然后长按图片保存</li>
             </ol>
         </div>
@@ -739,6 +748,9 @@
                     
                     <div class="action-buttons">
                         <button id="clearLocalBtn" class="btn-danger"><i class="fas fa-trash"></i> 清空本地答案</button>
+                        <!-- 新增的提交按钮 -->
+                        <button id="submitBtn" class="btn-primary" disabled><i class="fas fa-cloud-upload-alt"></i> 提交答案</button>
+                        <!-- 修改生成图片按钮，初始为禁用状态 -->
                         <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成年度图片</button>
                     </div>
                 </div>
@@ -819,7 +831,8 @@
         let currentUser = {
             name: "匿名用户",
             answers: new Array(40).fill(""),
-            currentQuestionIndex: 0
+            currentQuestionIndex: 0,
+            submitted: false // 新增：标记是否已提交
         };
 
         // 存储生成的图片数据
@@ -845,6 +858,7 @@
         const unansweredCountElement = document.getElementById('unansweredCount');
         const completionDots = document.getElementById('completionDots');
         const clearLocalBtn = document.getElementById('clearLocalBtn');
+        const submitBtn = document.getElementById('submitBtn'); // 新增：提交按钮
         
         // 图片预览相关元素
         const imagePreview = document.getElementById('imagePreview');
@@ -853,9 +867,6 @@
         const imagePreviewDownload = document.getElementById('imagePreviewDownload');
         const imagePreviewLoading = document.getElementById('imagePreviewLoading');
         const previewInstruction = document.getElementById('previewInstruction');
-
-        // 是否已自动提交的标记
-        let hasAutoSubmitted = false;
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -969,6 +980,55 @@
             }
         }
 
+        // 提交答案到云端
+        async function submitAnswers() {
+            const answeredCount = currentUser.answers.filter(a => a && a.trim() !== '').length;
+            
+            if (answeredCount < 40) {
+                showNotification('请先完成所有40个问题后再提交', 'warning');
+                return;
+            }
+            
+            // 禁用提交按钮并显示提交中
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+            
+            showNotification('正在提交答案到云端，请稍候...', 'warning', 5000);
+            
+            try {
+                const result = await saveToGoogleSheets();
+                
+                if (result.success) {
+                    // 标记已提交
+                    currentUser.submitted = true;
+                    saveUserProgress(); // 保存提交状态
+                    
+                    // 启用生成图片按钮
+                    generateImageBtn.disabled = false;
+                    
+                    // 更新提交按钮状态
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> 已提交';
+                    submitBtn.style.backgroundColor = '#689f38';
+                    submitBtn.disabled = true;
+                    
+                    showNotification(result.message || '提交成功！现在可以生成年度图片了', 'success');
+                    
+                    // 滚动到生成图片按钮
+                    setTimeout(() => {
+                        generateImageBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 500);
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 提交答案';
+                    showNotification('提交失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 提交答案';
+                showNotification('提交失败: ' + error.message, 'error');
+            }
+        }
+
         // 初始化问题列表
         function initQuestionsList() {
             questionsList.innerHTML = '';
@@ -1022,44 +1082,14 @@
             // 更新完成状态圆点
             updateCompletionDots();
             
-            // 如果所有题目都已完成且是第40题，并且还没有自动提交过
-            if (allAnswered && questionIndex === 39 && !hasAutoSubmitted) {
-                // 自动提交
-                autoSubmitAfterCompletion();
-            }
+            // 如果所有题目都已完成，启用提交按钮
+            submitBtn.disabled = !allAnswered || currentUser.submitted;
             
-            // 如果所有题目都已完成，启用生成图片按钮
-            generateImageBtn.disabled = !allAnswered;
+            // 如果已经提交过，启用生成图片按钮
+            generateImageBtn.disabled = !currentUser.submitted;
             
             highlightCurrentQuestion();
             saveUserProgress();
-        }
-
-        // 自动提交完成后启用生成图片按钮
-        async function autoSubmitAfterCompletion() {
-            showNotification('所有题目已完成，正在提交答案到云端...', 'warning', 3000);
-            
-            try {
-                const result = await saveToGoogleSheets();
-                
-                if (result.success) {
-                    showNotification('现在可以生成年度图片了', 'success');
-                    hasAutoSubmitted = true;
-                    
-                    // 更新按钮文本
-                    generateImageBtn.innerHTML = '<i class="fas fa-image"></i> 生成年度图片';
-                    generateImageBtn.disabled = false;
-                    
-                    // 滚动到生成图片按钮
-                    setTimeout(() => {
-                        generateImageBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 500);
-                } else {
-                    showNotification('提交失败，请手动点击生成图片按钮重试', 'error');
-                }
-            } catch (error) {
-                showNotification('提交失败，请手动点击生成图片按钮重试', 'error');
-            }
         }
 
         // 更新进度
@@ -1092,14 +1122,6 @@
             
             const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
             updateProgress(answeredCount);
-            
-            // 如果保存的是第40题且所有题目都已完成，检查是否需要自动提交
-            if (currentUser.currentQuestionIndex === 39) {
-                const allAnswered = answeredCount === questions.length;
-                if (allAnswered && !hasAutoSubmitted) {
-                    autoSubmitAfterCompletion();
-                }
-            }
         }
 
         // 保存用户进度到本地存储
@@ -1111,9 +1133,26 @@
         function loadUserProgress() {
             const savedProgress = localStorage.getItem('currentUserProgress');
             if (savedProgress) {
-                currentUser = JSON.parse(savedProgress);
+                const savedUser = JSON.parse(savedProgress);
+                currentUser = {
+                    ...currentUser,
+                    ...savedUser,
+                    // 确保answers数组长度正确
+                    answers: savedUser.answers && savedUser.answers.length === 40 
+                        ? savedUser.answers 
+                        : new Array(40).fill("")
+                };
+                
                 updateQuestionDisplay();
                 initCompletionDots();
+                
+                // 如果之前已经提交过，启用生成图片按钮
+                if (currentUser.submitted) {
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> 已提交';
+                    submitBtn.style.backgroundColor = '#689f38';
+                    submitBtn.disabled = true;
+                    generateImageBtn.disabled = false;
+                }
             }
         }
 
@@ -1122,7 +1161,7 @@
             if (confirm('确定要清空所有本地答案吗？此操作不可撤销。')) {
                 currentUser.answers = new Array(40).fill("");
                 currentUser.currentQuestionIndex = 0;
-                hasAutoSubmitted = false;
+                currentUser.submitted = false;
                 
                 // 清除本地存储
                 localStorage.removeItem('currentUserProgress');
@@ -1135,7 +1174,11 @@
                 startBtn.disabled = false;
                 userNameInput.disabled = false;
                 
-                // 重置生成图片按钮
+                // 重置提交按钮和生成图片按钮
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 提交答案';
+                submitBtn.style.backgroundColor = '';
+                
                 generateImageBtn.disabled = true;
                 generateImageBtn.innerHTML = '<i class="fas fa-image"></i> 生成年度图片';
                 
@@ -1440,6 +1483,12 @@
 
         // 生成图片
         async function generateImages() {
+            // 检查是否已提交
+            if (!currentUser.submitted) {
+                showNotification('请先提交答案后才能生成图片', 'error');
+                return;
+            }
+            
             const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 800);
             if (hasLongAnswer) {
                 if (!confirm('检测到部分答案较长，系统将自动调整字体大小以确保所有内容都能放入图片中。是否继续生成图片？')) {
@@ -1624,6 +1673,9 @@
             startBtn.addEventListener('click', startAnswering);
             
             clearLocalBtn.addEventListener('click', clearLocalAnswers);
+            
+            // 新增：提交按钮事件监听器
+            submitBtn.addEventListener('click', submitAnswers);
 
             userNameInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
