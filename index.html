@@ -759,8 +759,7 @@
         </div>
         
         <footer>
-            <p>© 2025 年度回顾反思 | 设计灵感来自年度反思问题列表</p>
-            <p>提示：所有答案会自动保存到云端Google Sheets，生成的图片为JPG格式</p>
+            <p>© 2025 年度回顾反思 | HiHeart </p>
         </footer>
     </div>
 
@@ -1044,7 +1043,7 @@
                 const result = await saveToGoogleSheets();
                 
                 if (result.success) {
-                    showNotification('答案已成功提交到云端！现在可以生成年度图片了', 'success');
+                    showNotification('现在可以生成年度图片了', 'success');
                     hasAutoSubmitted = true;
                     
                     // 更新按钮文本
@@ -1056,10 +1055,10 @@
                         generateImageBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }, 500);
                 } else {
-                    showNotification('自动提交失败，请手动点击生成图片按钮重试', 'error');
+                    showNotification('提交失败，请手动点击生成图片按钮重试', 'error');
                 }
             } catch (error) {
-                showNotification('自动提交失败，请手动点击生成图片按钮重试', 'error');
+                showNotification('提交失败，请手动点击生成图片按钮重试', 'error');
             }
         }
 
@@ -1456,10 +1455,10 @@
                 generatedImages = [];
                 
                 const partTitles = [
-                    "第一部分: 成长与经历 (第1-10题)",
-                    "第二部分: 反思与感悟 (第11-20题)", 
-                    "第三部分: 个人与社交 (第21-30题)",
-                    "第四部分: 文化与生活 (第31-40题)"
+                    "第一部分: 成长与经历",
+                    "第二部分: 反思与感悟", 
+                    "第三部分: 个人与社交",
+                    "第四部分: 文化与生活"
                 ];
                 
                 // 生成所有图片
