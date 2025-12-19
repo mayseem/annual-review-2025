@@ -244,7 +244,7 @@
             transition: background-color 0.3s;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            min-height: 44px;
+            min-height: 44px; /* 移动端最小触摸区域 */
         }
         
         button:hover {
@@ -352,10 +352,6 @@
         
         .notification.warning {
             background-color: #ff9800;
-        }
-        
-        .notification.info {
-            background-color: #2196f3;
         }
         
         .completion-status {
@@ -603,36 +599,6 @@
             margin-bottom: 20px;
         }
         
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 3000;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #8b7355;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         /* 移动端优化 */
         @media (max-width: 767px) {
             .navigation-buttons button {
@@ -661,6 +627,7 @@
                 font-size: 0.8rem;
             }
             
+            /* 移动端触摸优化 */
             .question-item {
                 padding: 10px;
                 margin-bottom: 8px;
@@ -668,14 +635,15 @@
             
             textarea {
                 padding: 12px;
-                font-size: 16px;
+                font-size: 16px; /* 防止iOS自动缩放 */
             }
             
             button, input, textarea {
-                font-size: 16px;
+                font-size: 16px; /* 防止iOS自动缩放 */
             }
         }
         
+        /* 防止移动端缩放 */
         @media (max-width: 767px) {
             input, textarea {
                 font-size: 16px !important;
@@ -686,12 +654,6 @@
 <body>
     <!-- 通知区域 -->
     <div id="notification" class="notification"></div>
-    
-    <!-- 加载遮罩 -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div id="loadingText">处理中，请稍候...</div>
-    </div>
     
     <!-- 图片预览区域 -->
     <div id="imagePreview" class="image-preview">
@@ -737,7 +699,6 @@
                 <div class="answer-form">
                     <div class="user-info">
                         <input type="text" id="userName" placeholder="请输入你的姓名或昵称" value="匿名用户">
-                        <button id="startBtn">开始回答</button>
                     </div>
                     
                     <div class="progress-container">
@@ -747,6 +708,7 @@
                         </div>
                     </div>
                     
+                    <!-- 题目完成状态显示 -->
                     <div class="completion-status">
                         <div class="completion-title">
                             <i class="fas fa-list-check"></i> 题目完成情况
@@ -800,12 +762,12 @@
         </footer>
     </div>
 
+    <!-- html2canvas 库用于将HTML转换为图片 -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <script>
-        // === 配置部分 ===
-        // 使用新的Google Script URL
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwn-96X4rY6-aJKfNCVgSqfjrYNwOZn6cY0MhwVBRO3Pn3NpgglFp1ojo8GtGhnHp_N-Q/exec';
+        // 配置
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzR7JzE4bDbOUmL-jhPwbSn8FPsNQeFsmFJwHT1uuxjKnyK0aEK7kr3M-3XUSACWlg4/exec';
         
         // 40个年度问题
         const questions = [
@@ -868,7 +830,6 @@
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const saveBtn = document.getElementById('saveBtn');
-        const startBtn = document.getElementById('startBtn');
         const userNameInput = document.getElementById('userName');
         const generateImageBtn = document.getElementById('generateImageBtn');
         const previewContainer = document.getElementById('previewContainer');
@@ -881,8 +842,6 @@
         const unansweredCountElement = document.getElementById('unansweredCount');
         const completionDots = document.getElementById('completionDots');
         const clearLocalBtn = document.getElementById('clearLocalBtn');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingText = document.getElementById('loadingText');
         
         // 图片预览相关元素
         const imagePreview = document.getElementById('imagePreview');
@@ -891,19 +850,6 @@
         const imagePreviewDownload = document.getElementById('imagePreviewDownload');
         const imagePreviewLoading = document.getElementById('imagePreviewLoading');
         const previewInstruction = document.getElementById('previewInstruction');
-
-        // 是否已自动提交的标记
-        let hasAutoSubmitted = false;
-
-        // 显示/隐藏加载遮罩
-        function showLoading(text = '处理中，请稍候...') {
-            loadingText.textContent = text;
-            loadingOverlay.style.display = 'flex';
-        }
-
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -919,6 +865,77 @@
         // 检测是否为移动设备
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // 生成用户ID（如果不存在）
+        function getOrCreateUserId() {
+            let userId = localStorage.getItem('annualReviewUserId');
+            if (!userId) {
+                // 生成一个唯一的用户ID
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('annualReviewUserId', userId);
+            }
+            return userId;
+        }
+
+        // 保存数据到Google表格
+        async function saveToGoogleSheets() {
+            try {
+                const userId = getOrCreateUserId();
+                const name = currentUser.name;
+                const answers = currentUser.answers;
+                const generateTime = new Date().toISOString();
+                
+                // 检查是否有答案
+                const answeredQuestions = answers.filter(answer => answer && answer.trim() !== '');
+                if (answeredQuestions.length === 0) {
+                    return { success: false, message: '没有答案可保存' };
+                }
+                
+                showNotification('正在保存答案...', 'warning');
+                
+                // 发送请求到Google Apps Script
+                // 使用FormData格式发送数据
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('name', name);
+                formData.append('answers', JSON.stringify(answers));
+                formData.append('generate_time', generateTime);
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: 保存失败`);
+                }
+                
+                // 尝试解析响应
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    // 如果无法解析为JSON，可能是Google Apps Script返回了其他格式
+                    result = { success: true, message: '答案已保存' };
+                }
+                
+                showNotification('答案保存成功', 'success');
+                
+                return { 
+                    success: true, 
+                    message: '答案已保存',
+                    completed_count: answeredQuestions.length
+                };
+                
+            } catch (error) {
+                console.error('保存到Google表格失败:', error);
+                showNotification('保存失败，无法生成图片: ' + error.message, 'error');
+                return { 
+                    success: false, 
+                    message: '保存失败: ' + error.message
+                };
+            }
         }
 
         // 初始化完成状态圆点
@@ -968,82 +985,6 @@
             
             answeredCountElement.textContent = answeredCount;
             unansweredCountElement.textContent = 40 - answeredCount;
-            
-            // 更新生成图片按钮状态
-            const allAnswered = answeredCount === 40;
-            generateImageBtn.disabled = !allAnswered;
-        }
-
-        // 保存数据到Google Sheets - 使用简单GET请求
-        async function saveToGoogleSheets() {
-            try {
-                const answeredCount = currentUser.answers.filter(a => a && a.trim() !== '').length;
-                
-                // 构建查询参数 - 使用简单的参数
-                const params = new URLSearchParams();
-                params.append('action', 'save');
-                params.append('timestamp', new Date().toISOString());
-                params.append('name', currentUser.name);
-                params.append('completed', answeredCount.toString());
-                
-                // 只发送有答案的问题，避免URL过长
-                for (let i = 0; i < 40; i++) {
-                    const answer = currentUser.answers[i] || '';
-                    if (answer.trim() !== '') {
-                        params.append(`q${i + 1}`, answer.substring(0, 1000));
-                    }
-                }
-                
-                showLoading('正在提交数据到云端...');
-                
-                // 使用GET请求，更简单可靠
-                const url = GOOGLE_SCRIPT_URL + '?' + params.toString();
-                console.log('提交URL长度:', url.length);
-                
-                const response = await fetch(url);
-                
-                console.log('响应状态:', response.status, response.statusText);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP错误: ${response.status}`);
-                }
-                
-                const resultText = await response.text();
-                console.log('原始响应:', resultText);
-                
-                let result;
-                try {
-                    result = JSON.parse(resultText);
-                } catch (e) {
-                    console.error('JSON解析失败:', resultText);
-                    result = { 
-                        success: false, 
-                        message: '响应解析失败',
-                        rawResponse: resultText
-                    };
-                }
-                
-                console.log('解析结果:', result);
-                
-                if (result.success) {
-                    return { 
-                        success: true, 
-                        message: result.message || '数据已保存',
-                        data: result
-                    };
-                } else {
-                    throw new Error(result.message || result.error || '保存失败');
-                }
-                
-            } catch (error) {
-                console.error('保存到Google Sheets失败:', error);
-                return { 
-                    success: false, 
-                    message: error.message || '网络错误，请检查网络连接后重试'
-                };
-            } finally {
-                hideLoading();
-            }
         }
 
         // 初始化问题列表
@@ -1099,44 +1040,11 @@
             // 更新完成状态圆点
             updateCompletionDots();
             
-            // 如果所有题目都已完成且是第40题，并且还没有自动提交过
-            if (allAnswered && questionIndex === 39 && !hasAutoSubmitted) {
-                // 自动提交
-                autoSubmitAfterCompletion();
-            }
-            
             // 如果所有题目都已完成，启用生成图片按钮
             generateImageBtn.disabled = !allAnswered;
             
             highlightCurrentQuestion();
             saveUserProgress();
-        }
-
-        // 自动提交完成后启用生成图片按钮
-        async function autoSubmitAfterCompletion() {
-            showNotification('所有题目已完成，正在提交答案到云端...', 'info', 5000);
-            
-            try {
-                const result = await saveToGoogleSheets();
-                
-                if (result.success) {
-                    showNotification('数据已成功保存到云端，现在可以生成年度图片了', 'success');
-                    hasAutoSubmitted = true;
-                    
-                    // 滚动到生成图片按钮
-                    setTimeout(() => {
-                        generateImageBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 500);
-                } else {
-                    showNotification('自动提交失败: ' + result.message, 'error');
-                    // 仍然允许手动生成图片
-                    generateImageBtn.disabled = false;
-                }
-            } catch (error) {
-                showNotification('提交失败: ' + error.message, 'error');
-                // 仍然允许手动生成图片
-                generateImageBtn.disabled = false;
-            }
         }
 
         // 更新进度
@@ -1170,14 +1078,10 @@
             const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
             updateProgress(answeredCount);
             
-            // 如果保存的是第40题且所有题目都已完成，检查是否需要自动提交
-            if (currentUser.currentQuestionIndex === 39) {
-                const allAnswered = answeredCount === questions.length;
-                if (allAnswered && !hasAutoSubmitted) {
-                    setTimeout(() => {
-                        autoSubmitAfterCompletion();
-                    }, 1000);
-                }
+            // 如果所有题目都已完成，启用生成图片按钮
+            if (answeredCount === questions.length) {
+                generateImageBtn.disabled = false;
+                showNotification('所有题目已完成，现在可以生成年度图片了', 'success');
             }
         }
 
@@ -1190,18 +1094,13 @@
         function loadUserProgress() {
             const savedProgress = localStorage.getItem('currentUserProgress');
             if (savedProgress) {
-                try {
-                    currentUser = JSON.parse(savedProgress);
-                    updateQuestionDisplay();
-                    initCompletionDots();
-                    
-                    // 如果之前已经完成所有题目，检查是否已提交
-                    const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
-                    if (answeredCount === 40) {
-                        generateImageBtn.disabled = false;
-                    }
-                } catch (e) {
-                    console.error('加载本地进度失败:', e);
+                currentUser = JSON.parse(savedProgress);
+                updateQuestionDisplay();
+                initCompletionDots();
+                
+                // 如果本地有用户名，更新输入框
+                if (currentUser.name) {
+                    userNameInput.value = currentUser.name;
                 }
             }
         }
@@ -1211,32 +1110,20 @@
             if (confirm('确定要清空所有本地答案吗？此操作不可撤销。')) {
                 currentUser.answers = new Array(40).fill("");
                 currentUser.currentQuestionIndex = 0;
-                hasAutoSubmitted = false;
                 
                 // 清除本地存储
                 localStorage.removeItem('currentUserProgress');
+                localStorage.removeItem('annualReviewUserId'); // 也清除用户ID
                 
                 // 重置UI
                 updateQuestionDisplay();
                 initCompletionDots();
                 
-                // 启用用户输入
-                startBtn.disabled = false;
-                userNameInput.disabled = false;
+                // 重置生成图片按钮
+                generateImageBtn.disabled = true;
                 
                 showNotification('本地答案已清空', 'success');
             }
-        }
-
-        // 开始回答
-        function startAnswering() {
-            const name = userNameInput.value.trim() || "匿名用户";
-            currentUser.name = name;
-            
-            updateQuestionDisplay();
-            initCompletionDots();
-            startBtn.disabled = true;
-            userNameInput.disabled = true;
         }
 
         // 显示图片预览
@@ -1282,25 +1169,9 @@
             // 对于移动设备，使用新窗口打开
             if (isMobileDevice()) {
                 const newWindow = window.open();
-                if (newWindow) {
-                    newWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <title>${filename}</title>
-                            <style>
-                                body { margin: 0; padding: 20px; background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                                img { max-width: 100%; height: auto; border: 2px solid #333; border-radius: 5px; }
-                            </style>
-                        </head>
-                        <body>
-                            <img src="${imageDataUrl}" alt="${filename}">
-                        </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
-                    showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
-                }
+                newWindow.document.write(`<img src="${imageDataUrl}" style="max-width:100%;"/>`);
+                newWindow.document.close();
+                showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
                 return false;
             }
             
@@ -1365,7 +1236,7 @@
             return isFit ? fontSize : minFontSize;
         }
 
-        // 生成单张图片
+        // 生成单张图片 - 答案与题目中的第一个字对齐
         function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
             return new Promise((resolve, reject) => {
                 // 固定图片尺寸
@@ -1377,10 +1248,10 @@
                 const paddingBottom = 40;
                 const paddingLeftRight = 40;
                 
-                // 页眉高度
+                // 页眉高度（包括标题和第一条横线）
                 const headerHeight = 140;
                 
-                // 页脚高度
+                // 页脚高度（包括第二条横线和版权信息）
                 const footerHeight = 100;
                 
                 // 计算两条横线之间的内容区域高度
@@ -1390,8 +1261,8 @@
                 const sectionHeight = contentHeight / 10;
                 
                 // 每个部分中，问题行固定高度，答案行占据剩余高度
-                const questionRowHeight = 60;
-                const answerRowHeight = sectionHeight - questionRowHeight;
+                const questionRowHeight = 60; // 固定问题行高度
+                const answerRowHeight = sectionHeight - questionRowHeight; // 答案行高度
                 
                 // 计算内容区域宽度
                 const contentWidth = width - paddingLeftRight * 2;
@@ -1411,14 +1282,16 @@
                 tempContainer.style.fontFamily = "'Noto Sans SC', sans-serif";
                 document.body.appendChild(tempContainer);
                 
-                // 构建页眉
+                // 构建页眉 - 在"2025年 | 第2/4部分"下面添加横线
                 let contentHTML = `
                     <div style="height: ${headerHeight}px; text-align: center;">
                         <div style="font-size: 32px; color: #5d4037; font-weight: bold; margin-bottom: 10px; line-height: 1.2;">${currentUser.name}的年度回顾</div>
                         <div style="font-size: 24px; color: #795548; font-weight: 600; margin-bottom: 5px;">${partTitle}</div>
                         <div style="font-size: 18px; color: #8d6e63; margin-bottom: 15px;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
+                        <!-- 第一条横线 -->
                         <hr style="border: none; border-top: 2px solid #8b7355; margin: 0; width: 100%;">
                     </div>
+                    <!-- 内容区域开始（两条横线之间） -->
                     <div style="height: ${contentHeight}px; overflow: hidden; position: relative;">
                 `;
                 
@@ -1434,17 +1307,20 @@
                     // 计算答案的最佳字体大小
                     const answerFontSize = calculateOptimalFontSize(
                         answer, 
-                        answerRowHeight - 20,
-                        contentWidth - 55,
-                        22,
-                        10
+                        answerRowHeight - 20, // 减去内边距
+                        contentWidth - 55,    // 减去左边距
+                        22,                   // 最大字体
+                        10                    // 最小字体
                     );
                     
-                    // 问题文本起始位置
-                    const questionStartPosition = 55;
+                    // 获取问题文本的第一行的起始位置
+                    // 问题编号宽度为40px + 右边距15px = 55px
+                    // 问题文本从这个位置开始
+                    const questionStartPosition = 55; // 问题文本起始位置
                     
                     contentHTML += `
                         <div style="position: absolute; top: ${sectionTop}px; left: 0; right: 0; height: ${sectionHeight}px;">
+                            <!-- 问题行 -->
                             <div style="height: ${questionRowHeight}px; display: flex; align-items: center; padding: 5px 0;">
                                 <div style="flex-shrink: 0; margin-right: 15px;">
                                     <span style="background-color: #8b7355; color: white; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">${questionNumber}</span>
@@ -1454,6 +1330,7 @@
                                 </div>
                             </div>
                             
+                            <!-- 答案行 - 与问题文本第一个字对齐 -->
                             <div style="height: ${answerRowHeight}px; padding: 5px 0 10px ${questionStartPosition}px; overflow: hidden;">
                                 <div style="font-size: ${answerFontSize}px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word; height: 100%; overflow: hidden;">
                                     ${answer}
@@ -1464,9 +1341,11 @@
                 }
                 
                 contentHTML += `</div>`;
+                // 内容区域结束
                 
-                // 构建页脚
+                // 构建页脚 - 在版权信息上面添加横线
                 contentHTML += `
+                    <!-- 第二条横线 -->
                     <hr style="border: none; border-top: 1px solid #8b7355; margin: 20px 0 15px; width: 100%;">
                     <div style="height: ${footerHeight - 40}px; text-align: center; color: #795548; font-size: 16px; padding-top: 10px;">
                         <div style="margin-bottom: 5px;">© ${new Date().getFullYear()} 年度回顾反思</div>
@@ -1492,6 +1371,7 @@
                         windowWidth: width,
                         windowHeight: height,
                         allowTaint: true,
+                        useCORS: true,
                         onclone: function(clonedDoc) {
                             const style = clonedDoc.createElement('style');
                             style.textContent = `
@@ -1532,21 +1412,6 @@
 
         // 生成图片
         async function generateImages() {
-            // 先尝试提交数据到Google Sheets
-            if (!hasAutoSubmitted) {
-                showNotification('正在提交数据到云端...', 'info');
-                const result = await saveToGoogleSheets();
-                
-                if (!result.success) {
-                    const proceed = confirm(`数据提交失败: ${result.message}\n是否继续生成图片？`);
-                    if (!proceed) {
-                        return;
-                    }
-                } else {
-                    hasAutoSubmitted = true;
-                }
-            }
-            
             const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 800);
             if (hasLongAnswer) {
                 if (!confirm('检测到部分答案较长，系统将自动调整字体大小以确保所有内容都能放入图片中。是否继续生成图片？')) {
@@ -1555,9 +1420,18 @@
             }
             
             // 显示生成图片中的通知
-            showLoading('正在生成年度图片，这可能需要一些时间，请耐心等待...');
+            showNotification('正在生成年度图片，请稍候...', 'warning', 5000);
             
             try {
+                // 先保存数据到Google表格
+                const saveResult = await saveToGoogleSheets();
+                
+                // 如果保存失败，阻止图片生成
+                if (!saveResult.success) {
+                    showNotification('无法生成图片：数据保存失败', 'error');
+                    return;
+                }
+                
                 // 清空之前的图片数据
                 generatedImages = [];
                 
@@ -1576,7 +1450,7 @@
                     const partAnswers = currentUser.answers.slice(startIdx, endIdx);
                     
                     try {
-                        loadingText.textContent = `正在生成第${partIndex + 1}/4部分...`;
+                        showNotification(`正在生成第${partIndex + 1}/4部分...`, 'warning', 2000);
                         const imageDataUrl = await generateSingleImage(partIndex, partTitles[partIndex], partQuestions, partAnswers);
                         generatedImages.push({
                             index: partIndex,
@@ -1588,23 +1462,15 @@
                         // 每张图片生成后稍微延迟，避免内存问题
                         await new Promise(resolve => setTimeout(resolve, isMobileDevice() ? 800 : 500));
                     } catch (error) {
-                        console.error(`第${partIndex + 1}部分生成失败:`, error);
+                        showNotification(`第${partIndex + 1}部分生成失败: ${error.message}`, 'error');
                         continue;
                     }
                 }
                 
-                hideLoading();
-                
                 // 显示预览
-                if (generatedImages.length > 0) {
-                    showPreview();
-                    showNotification('年度图片生成完成！', 'success');
-                } else {
-                    showNotification('图片生成失败，请重试', 'error');
-                }
+                showPreview();
                 
             } catch (error) {
-                hideLoading();
                 showNotification('生成图片时出错: ' + error.message, 'error');
             }
         }
@@ -1674,6 +1540,7 @@
             });
             
             previewContainer.scrollIntoView({ behavior: 'smooth' });
+            showNotification('年度图片生成完成！', 'success');
         }
 
         // 下载所有图片
@@ -1691,7 +1558,6 @@
                 }
             }
             
-            showLoading('正在下载图片...');
             let successCount = 0;
             
             // 逐张下载图片
@@ -1706,8 +1572,6 @@
                 // 每张图片下载间隔1秒，避免浏览器限制
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
-            
-            hideLoading();
             
             if (successCount > 0) {
                 showNotification(`成功下载${successCount}张图片`, 'success');
@@ -1738,14 +1602,12 @@
 
             saveBtn.addEventListener('click', saveAnswer);
 
-            startBtn.addEventListener('click', startAnswering);
-            
             clearLocalBtn.addEventListener('click', clearLocalAnswers);
 
-            userNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    startAnswering();
-                }
+            // 用户名输入时自动保存
+            userNameInput.addEventListener('input', function() {
+                currentUser.name = userNameInput.value.trim() || "匿名用户";
+                saveUserProgress();
             });
 
             generateImageBtn.addEventListener('click', generateImages);
@@ -1779,6 +1641,42 @@
                     saveAnswer();
                 }
             });
+            
+            // 防止移动端缩放
+            document.addEventListener('touchstart', function(event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+            
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // 移动端优化：点击输入框时不放大
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    // 移动端禁用缩放
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                });
+                
+                input.addEventListener('blur', () => {
+                    // 恢复默认viewport
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                });
+            });
+            
+            // 移动端优化：增加触摸区域
+            const touchElements = document.querySelectorAll('button, .question-item, .completion-dot');
+            touchElements.forEach(el => {
+                el.style.cursor = 'pointer';
+            });
         }
 
         // 初始化应用
@@ -1788,9 +1686,9 @@
             initEventListeners();
             loadUserProgress();
             
-            if (localStorage.getItem('currentUserProgress')) {
-                startBtn.disabled = true;
-                userNameInput.disabled = true;
+            // 自动设置用户名
+            if (currentUser.name && currentUser.name !== "匿名用户") {
+                userNameInput.value = currentUser.name;
             }
         }
 
