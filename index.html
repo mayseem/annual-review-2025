@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 保持原有CSS样式不变 */
         * {
             margin: 0;
             padding: 0;
@@ -805,9 +804,8 @@
     
     <script>
         // === 配置部分 ===
-        // !!! 重要：请将下面的URL替换为你提供的Google Script URL !!!
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxh5qO4mW_qbO_bLnLHMVs3gwNJgBBm8zDGriIjX9SCtCaQ3CH_ofiiYuwAbhzKoY6_A/exec';
-        const GOOGLE_SHEET_ID = '1mwloK9-aOUEWR7Mn9AHnfsW17I5BZ0gdv0xSuINg56g';
+        // 使用新的Google Script URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwn-96X4rY6-aJKfNCVgSqfjrYNwOZn6cY0MhwVBRO3Pn3NpgglFp1ojo8GtGhnHp_N-Q/exec';
         
         // 40个年度问题
         const questions = [
@@ -976,51 +974,63 @@
             generateImageBtn.disabled = !allAnswered;
         }
 
-        // 保存数据到Google Sheets - 使用POST请求
+        // 保存数据到Google Sheets - 使用简单GET请求
         async function saveToGoogleSheets() {
             try {
                 const answeredCount = currentUser.answers.filter(a => a && a.trim() !== '').length;
                 
-                // 构建查询参数
+                // 构建查询参数 - 使用简单的参数
                 const params = new URLSearchParams();
                 params.append('action', 'save');
                 params.append('timestamp', new Date().toISOString());
                 params.append('name', currentUser.name);
                 params.append('completed', answeredCount.toString());
                 
-                // 添加所有40个问题，空答案也发送
+                // 只发送有答案的问题，避免URL过长
                 for (let i = 0; i < 40; i++) {
                     const answer = currentUser.answers[i] || '';
-                    params.append(`q${i + 1}`, answer.substring(0, 50000));
+                    if (answer.trim() !== '') {
+                        params.append(`q${i + 1}`, answer.substring(0, 1000));
+                    }
                 }
                 
                 showLoading('正在提交数据到云端...');
                 
-                // 使用POST请求避免URL过长问题
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    body: params,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                });
+                // 使用GET请求，更简单可靠
+                const url = GOOGLE_SCRIPT_URL + '?' + params.toString();
+                console.log('提交URL长度:', url.length);
+                
+                const response = await fetch(url);
+                
+                console.log('响应状态:', response.status, response.statusText);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP错误: ${response.status}`);
                 }
                 
                 const resultText = await response.text();
+                console.log('原始响应:', resultText);
                 
                 let result;
                 try {
                     result = JSON.parse(resultText);
                 } catch (e) {
                     console.error('JSON解析失败:', resultText);
-                    result = { success: false, message: '响应解析失败' };
+                    result = { 
+                        success: false, 
+                        message: '响应解析失败',
+                        rawResponse: resultText
+                    };
                 }
                 
+                console.log('解析结果:', result);
+                
                 if (result.success) {
-                    return { success: true, message: result.message || '数据已保存' };
+                    return { 
+                        success: true, 
+                        message: result.message || '数据已保存',
+                        data: result
+                    };
                 } else {
                     throw new Error(result.message || result.error || '保存失败');
                 }
