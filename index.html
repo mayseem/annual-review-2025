@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 保持原有CSS样式不变 */
         * {
             margin: 0;
             padding: 0;
@@ -244,7 +245,7 @@
             transition: background-color 0.3s;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            min-height: 44px; /* 移动端最小触摸区域 */
+            min-height: 44px;
         }
         
         button:hover {
@@ -254,14 +255,6 @@
         button:disabled {
             background-color: #bcaaa4;
             cursor: not-allowed;
-        }
-        
-        .btn-primary {
-            background-color: #2196F3;
-        }
-        
-        .btn-primary:hover {
-            background-color: #0b7dda;
         }
         
         .btn-secondary {
@@ -360,6 +353,10 @@
         
         .notification.warning {
             background-color: #ff9800;
+        }
+        
+        .notification.info {
+            background-color: #2196f3;
         }
         
         .completion-status {
@@ -607,6 +604,36 @@
             margin-bottom: 20px;
         }
         
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #8b7355;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         /* 移动端优化 */
         @media (max-width: 767px) {
             .navigation-buttons button {
@@ -635,7 +662,6 @@
                 font-size: 0.8rem;
             }
             
-            /* 移动端触摸优化 */
             .question-item {
                 padding: 10px;
                 margin-bottom: 8px;
@@ -643,15 +669,14 @@
             
             textarea {
                 padding: 12px;
-                font-size: 16px; /* 防止iOS自动缩放 */
+                font-size: 16px;
             }
             
             button, input, textarea {
-                font-size: 16px; /* 防止iOS自动缩放 */
+                font-size: 16px;
             }
         }
         
-        /* 防止移动端缩放 */
         @media (max-width: 767px) {
             input, textarea {
                 font-size: 16px !important;
@@ -662,6 +687,12 @@
 <body>
     <!-- 通知区域 -->
     <div id="notification" class="notification"></div>
+    
+    <!-- 加载遮罩 -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div id="loadingText">处理中，请稍候...</div>
+    </div>
     
     <!-- 图片预览区域 -->
     <div id="imagePreview" class="image-preview">
@@ -688,8 +719,7 @@
                 <li>填写你的姓名或昵称，开始回答问题</li>
                 <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
                 <li>在每个问题下方的文本框中写下你的答案</li>
-                <li><strong>完成所有问题后，点击"提交答案"按钮将数据保存到云端</strong></li>
-                <li><strong>提交成功后，才能点击"生成年度图片"按钮生成图片</strong></li>
+                <li>完成所有问题后，系统会自动提交答案，然后显示"生成年度图片"按钮</li>
                 <li><strong>手机用户：</strong>生成图片后，可以点击预览中的"查看图片"按钮，然后长按图片保存</li>
             </ol>
         </div>
@@ -718,7 +748,6 @@
                         </div>
                     </div>
                     
-                    <!-- 题目完成状态显示 -->
                     <div class="completion-status">
                         <div class="completion-title">
                             <i class="fas fa-list-check"></i> 题目完成情况
@@ -748,9 +777,6 @@
                     
                     <div class="action-buttons">
                         <button id="clearLocalBtn" class="btn-danger"><i class="fas fa-trash"></i> 清空本地答案</button>
-                        <!-- 新增的提交按钮 -->
-                        <button id="submitBtn" class="btn-primary" disabled><i class="fas fa-cloud-upload-alt"></i> 提交答案</button>
-                        <!-- 修改生成图片按钮，初始为禁用状态 -->
                         <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成年度图片</button>
                     </div>
                 </div>
@@ -775,13 +801,13 @@
         </footer>
     </div>
 
-    <!-- html2canvas 库用于将HTML转换为图片 -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <script>
         // === 配置部分 ===
-        // 重要：更新为你的新Google Apps Script Web应用URL
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzQvyAGXZz-vjexqkpuwVFN2cZflrU2-61iSYHRzdDNhUGar5pKGNpjkgpEBh5YkKV-A/exec';
+        // !!! 重要：请将下面的URL替换为你提供的Google Script URL !!!
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxh5qO4mW_qbO_bLnLHMVs3gwNJgBBm8zDGriIjX9SCtCaQ3CH_ofiiYuwAbhzKoY6_A/exec';
+        const GOOGLE_SHEET_ID = '1mwloK9-aOUEWR7Mn9AHnfsW17I5BZ0gdv0xSuINg56g';
         
         // 40个年度问题
         const questions = [
@@ -831,10 +857,7 @@
         let currentUser = {
             name: "匿名用户",
             answers: new Array(40).fill(""),
-            currentQuestionIndex: 0,
-            submitted: false, // 新增：标记是否已提交
-            submissionId: null, // 新增：提交ID
-            submissionDate: null // 新增：提交日期
+            currentQuestionIndex: 0
         };
 
         // 存储生成的图片数据
@@ -860,9 +883,909 @@
         const unansweredCountElement = document.getElementById('unansweredCount');
         const completionDots = document.getElementById('completionDots');
         const clearLocalBtn = document.getElementById('clearLocalBtn');
-        const submitBtn = document.getElementById('submitBtn'); // 新增：提交按钮
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
         
         // 图片预览相关元素
         const imagePreview = document.getElementById('imagePreview');
         const previewImage = document.getElementById('previewImage');
-        const
+        const imagePreviewClose = document.getElementById('imagePreviewClose');
+        const imagePreviewDownload = document.getElementById('imagePreviewDownload');
+        const imagePreviewLoading = document.getElementById('imagePreviewLoading');
+        const previewInstruction = document.getElementById('previewInstruction');
+
+        // 是否已自动提交的标记
+        let hasAutoSubmitted = false;
+
+        // 显示/隐藏加载遮罩
+        function showLoading(text = '处理中，请稍候...') {
+            loadingText.textContent = text;
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'success', duration = 3000) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, duration);
+        }
+
+        // 检测是否为移动设备
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // 初始化完成状态圆点
+        function initCompletionDots() {
+            completionDots.innerHTML = '';
+            
+            for (let i = 0; i < 40; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'completion-dot unanswered';
+                dot.textContent = i + 1;
+                dot.dataset.index = i;
+                
+                dot.addEventListener('click', () => {
+                    currentUser.currentQuestionIndex = i;
+                    updateQuestionDisplay();
+                    updateCompletionDots();
+                });
+                
+                completionDots.appendChild(dot);
+            }
+            
+            updateCompletionDots();
+        }
+
+        // 更新完成状态圆点
+        function updateCompletionDots() {
+            const dots = document.querySelectorAll('.completion-dot');
+            let answeredCount = 0;
+            
+            dots.forEach((dot, index) => {
+                const isAnswered = currentUser.answers[index] && currentUser.answers[index].trim() !== '';
+                const isCurrent = index === currentUser.currentQuestionIndex;
+                
+                if (isAnswered) {
+                    dot.className = 'completion-dot answered';
+                    answeredCount++;
+                } else {
+                    dot.className = 'completion-dot unanswered';
+                }
+                
+                if (isCurrent) {
+                    dot.classList.add('current');
+                } else {
+                    dot.classList.remove('current');
+                }
+            });
+            
+            answeredCountElement.textContent = answeredCount;
+            unansweredCountElement.textContent = 40 - answeredCount;
+            
+            // 更新生成图片按钮状态
+            const allAnswered = answeredCount === 40;
+            generateImageBtn.disabled = !allAnswered;
+        }
+
+        // 保存数据到Google Sheets - 使用POST请求
+        async function saveToGoogleSheets() {
+            try {
+                const answeredCount = currentUser.answers.filter(a => a && a.trim() !== '').length;
+                
+                // 构建查询参数
+                const params = new URLSearchParams();
+                params.append('action', 'save');
+                params.append('timestamp', new Date().toISOString());
+                params.append('name', currentUser.name);
+                params.append('completed', answeredCount.toString());
+                
+                // 添加所有40个问题，空答案也发送
+                for (let i = 0; i < 40; i++) {
+                    const answer = currentUser.answers[i] || '';
+                    params.append(`q${i + 1}`, answer.substring(0, 50000));
+                }
+                
+                showLoading('正在提交数据到云端...');
+                
+                // 使用POST请求避免URL过长问题
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: params,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const resultText = await response.text();
+                
+                let result;
+                try {
+                    result = JSON.parse(resultText);
+                } catch (e) {
+                    console.error('JSON解析失败:', resultText);
+                    result = { success: false, message: '响应解析失败' };
+                }
+                
+                if (result.success) {
+                    return { success: true, message: result.message || '数据已保存' };
+                } else {
+                    throw new Error(result.message || result.error || '保存失败');
+                }
+                
+            } catch (error) {
+                console.error('保存到Google Sheets失败:', error);
+                return { 
+                    success: false, 
+                    message: error.message || '网络错误，请检查网络连接后重试'
+                };
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 初始化问题列表
+        function initQuestionsList() {
+            questionsList.innerHTML = '';
+            questions.forEach((question, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'question-item';
+                questionItem.innerHTML = `
+                    <span class="question-number">${index + 1}</span>
+                    <span class="question-text">${question}</span>
+                `;
+                
+                questionItem.addEventListener('click', () => {
+                    currentUser.currentQuestionIndex = index;
+                    updateQuestionDisplay();
+                    updateCompletionDots();
+                });
+                
+                questionsList.appendChild(questionItem);
+            });
+            
+            updateCompletionDots();
+        }
+
+        // 高亮当前问题
+        function highlightCurrentQuestion() {
+            const questionItems = document.querySelectorAll('.question-item');
+            questionItems.forEach((item, index) => {
+                if (index === currentUser.currentQuestionIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // 更新问题显示
+        function updateQuestionDisplay() {
+            const questionIndex = currentUser.currentQuestionIndex;
+            currentQuestionText.textContent = `${questionIndex + 1}. ${questions[questionIndex]}`;
+            answerInput.value = currentUser.answers[questionIndex] || "";
+            
+            prevBtn.disabled = questionIndex === 0;
+            nextBtn.disabled = questionIndex === questions.length - 1;
+            
+            const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
+            const allAnswered = answeredCount === questions.length;
+            
+            // 更新进度条
+            updateProgress(answeredCount);
+            
+            // 更新完成状态圆点
+            updateCompletionDots();
+            
+            // 如果所有题目都已完成且是第40题，并且还没有自动提交过
+            if (allAnswered && questionIndex === 39 && !hasAutoSubmitted) {
+                // 自动提交
+                autoSubmitAfterCompletion();
+            }
+            
+            // 如果所有题目都已完成，启用生成图片按钮
+            generateImageBtn.disabled = !allAnswered;
+            
+            highlightCurrentQuestion();
+            saveUserProgress();
+        }
+
+        // 自动提交完成后启用生成图片按钮
+        async function autoSubmitAfterCompletion() {
+            showNotification('所有题目已完成，正在提交答案到云端...', 'info', 5000);
+            
+            try {
+                const result = await saveToGoogleSheets();
+                
+                if (result.success) {
+                    showNotification('数据已成功保存到云端，现在可以生成年度图片了', 'success');
+                    hasAutoSubmitted = true;
+                    
+                    // 滚动到生成图片按钮
+                    setTimeout(() => {
+                        generateImageBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 500);
+                } else {
+                    showNotification('自动提交失败: ' + result.message, 'error');
+                    // 仍然允许手动生成图片
+                    generateImageBtn.disabled = false;
+                }
+            } catch (error) {
+                showNotification('提交失败: ' + error.message, 'error');
+                // 仍然允许手动生成图片
+                generateImageBtn.disabled = false;
+            }
+        }
+
+        // 更新进度
+        function updateProgress(answeredCount) {
+            const percentage = (answeredCount / questions.length) * 100;
+            progressText.textContent = `${answeredCount}/${questions.length}`;
+            progressFill.style.width = `${percentage}%`;
+        }
+
+        // 保存用户答案
+        function saveAnswer() {
+            const answer = answerInput.value.trim();
+            currentUser.answers[currentUser.currentQuestionIndex] = answer;
+            
+            // 保存到本地
+            saveUserProgress();
+            
+            // 更新完成状态
+            updateCompletionDots();
+            
+            const originalText = saveBtn.textContent;
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> 已保存';
+            saveBtn.style.backgroundColor = '#689f38';
+            
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.innerHTML = '保存当前答案';
+                saveBtn.style.backgroundColor = '';
+            }, 1000);
+            
+            const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
+            updateProgress(answeredCount);
+            
+            // 如果保存的是第40题且所有题目都已完成，检查是否需要自动提交
+            if (currentUser.currentQuestionIndex === 39) {
+                const allAnswered = answeredCount === questions.length;
+                if (allAnswered && !hasAutoSubmitted) {
+                    setTimeout(() => {
+                        autoSubmitAfterCompletion();
+                    }, 1000);
+                }
+            }
+        }
+
+        // 保存用户进度到本地存储
+        function saveUserProgress() {
+            localStorage.setItem('currentUserProgress', JSON.stringify(currentUser));
+        }
+
+        // 加载用户进度
+        function loadUserProgress() {
+            const savedProgress = localStorage.getItem('currentUserProgress');
+            if (savedProgress) {
+                try {
+                    currentUser = JSON.parse(savedProgress);
+                    updateQuestionDisplay();
+                    initCompletionDots();
+                    
+                    // 如果之前已经完成所有题目，检查是否已提交
+                    const answeredCount = currentUser.answers.filter(answer => answer.trim() !== "").length;
+                    if (answeredCount === 40) {
+                        generateImageBtn.disabled = false;
+                    }
+                } catch (e) {
+                    console.error('加载本地进度失败:', e);
+                }
+            }
+        }
+
+        // 清空本地答案
+        function clearLocalAnswers() {
+            if (confirm('确定要清空所有本地答案吗？此操作不可撤销。')) {
+                currentUser.answers = new Array(40).fill("");
+                currentUser.currentQuestionIndex = 0;
+                hasAutoSubmitted = false;
+                
+                // 清除本地存储
+                localStorage.removeItem('currentUserProgress');
+                
+                // 重置UI
+                updateQuestionDisplay();
+                initCompletionDots();
+                
+                // 启用用户输入
+                startBtn.disabled = false;
+                userNameInput.disabled = false;
+                
+                showNotification('本地答案已清空', 'success');
+            }
+        }
+
+        // 开始回答
+        function startAnswering() {
+            const name = userNameInput.value.trim() || "匿名用户";
+            currentUser.name = name;
+            
+            updateQuestionDisplay();
+            initCompletionDots();
+            startBtn.disabled = true;
+            userNameInput.disabled = true;
+        }
+
+        // 显示图片预览
+        function showImagePreview(imageDataUrl, partIndex) {
+            // 显示加载中
+            imagePreview.style.display = 'flex';
+            imagePreviewLoading.style.display = 'block';
+            previewImage.style.display = 'none';
+            imagePreviewDownload.style.display = 'none';
+            previewInstruction.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            
+            // 设置图片源
+            previewImage.src = imageDataUrl;
+            previewImage.dataset.part = partIndex;
+            
+            // 图片加载完成后显示
+            previewImage.onload = function() {
+                imagePreviewLoading.style.display = 'none';
+                previewImage.style.display = 'block';
+                imagePreviewDownload.style.display = 'block';
+                previewInstruction.style.display = 'block';
+            };
+            
+            // 图片加载失败
+            previewImage.onerror = function() {
+                imagePreviewLoading.textContent = '图片加载失败，请重试';
+                setTimeout(() => {
+                    closeImagePreview();
+                }, 2000);
+            };
+        }
+
+        // 关闭图片预览
+        function closeImagePreview() {
+            imagePreview.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            previewImage.src = '';
+        }
+
+        // 下载图片（兼容移动端）
+        function downloadImage(imageDataUrl, filename) {
+            // 对于移动设备，使用新窗口打开
+            if (isMobileDevice()) {
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>${filename}</title>
+                            <style>
+                                body { margin: 0; padding: 20px; background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                                img { max-width: 100%; height: auto; border: 2px solid #333; border-radius: 5px; }
+                            </style>
+                        </head>
+                        <body>
+                            <img src="${imageDataUrl}" alt="${filename}">
+                        </body>
+                        </html>
+                    `);
+                    newWindow.document.close();
+                    showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
+                }
+                return false;
+            }
+            
+            // 对于桌面设备，尝试直接下载
+            try {
+                // 创建临时链接
+                const link = document.createElement('a');
+                link.href = imageDataUrl;
+                link.download = filename;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                return true;
+            } catch (error) {
+                console.error('下载失败:', error);
+                return false;
+            }
+        }
+
+        // 计算答案的最佳字体大小
+        function calculateOptimalFontSize(answer, availableHeight, availableWidth, maxFontSize = 24, minFontSize = 10) {
+            if (!answer || answer.trim() === '') {
+                return maxFontSize;
+            }
+            
+            // 创建临时元素来测量
+            const tempElement = document.createElement('div');
+            tempElement.style.position = 'absolute';
+            tempElement.style.left = '-9999px';
+            tempElement.style.top = '0';
+            tempElement.style.width = `${availableWidth}px`;
+            tempElement.style.fontFamily = "'Ma Shan Zheng', cursive";
+            tempElement.style.whiteSpace = 'pre-wrap';
+            tempElement.style.wordWrap = 'break-word';
+            tempElement.style.lineHeight = '1.35';
+            tempElement.style.padding = '5px';
+            tempElement.textContent = answer;
+            document.body.appendChild(tempElement);
+            
+            // 从最大字体开始尝试
+            let fontSize = maxFontSize;
+            let isFit = false;
+            
+            while (fontSize >= minFontSize) {
+                tempElement.style.fontSize = `${fontSize}px`;
+                const elementHeight = tempElement.offsetHeight;
+                
+                if (elementHeight <= availableHeight) {
+                    isFit = true;
+                    break;
+                }
+                
+                fontSize -= 0.5; // 以0.5px的步长减小
+            }
+            
+            document.body.removeChild(tempElement);
+            
+            // 如果没有合适的字体大小，返回最小字体大小
+            return isFit ? fontSize : minFontSize;
+        }
+
+        // 生成单张图片
+        function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
+            return new Promise((resolve, reject) => {
+                // 固定图片尺寸
+                const width = 1080;
+                const height = 1920;
+                
+                // 边距设置
+                const paddingTop = 40;
+                const paddingBottom = 40;
+                const paddingLeftRight = 40;
+                
+                // 页眉高度
+                const headerHeight = 140;
+                
+                // 页脚高度
+                const footerHeight = 100;
+                
+                // 计算两条横线之间的内容区域高度
+                const contentHeight = height - headerHeight - footerHeight - paddingTop - paddingBottom;
+                
+                // 将内容区域分为10个等高的部分
+                const sectionHeight = contentHeight / 10;
+                
+                // 每个部分中，问题行固定高度，答案行占据剩余高度
+                const questionRowHeight = 60;
+                const answerRowHeight = sectionHeight - questionRowHeight;
+                
+                // 计算内容区域宽度
+                const contentWidth = width - paddingLeftRight * 2;
+                
+                const tempContainer = document.createElement('div');
+                tempContainer.style.width = `${width}px`;
+                tempContainer.style.height = `${height}px`;
+                tempContainer.style.padding = `${paddingTop}px ${paddingLeftRight}px ${paddingBottom}px ${paddingLeftRight}px`;
+                tempContainer.style.backgroundColor = '#fffefc';
+                tempContainer.style.color = '#3e2723';
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.top = '0';
+                tempContainer.style.overflow = 'hidden';
+                tempContainer.style.boxSizing = 'border-box';
+                tempContainer.style.zIndex = '-9999';
+                tempContainer.style.fontFamily = "'Noto Sans SC', sans-serif";
+                document.body.appendChild(tempContainer);
+                
+                // 构建页眉
+                let contentHTML = `
+                    <div style="height: ${headerHeight}px; text-align: center;">
+                        <div style="font-size: 32px; color: #5d4037; font-weight: bold; margin-bottom: 10px; line-height: 1.2;">${currentUser.name}的年度回顾</div>
+                        <div style="font-size: 24px; color: #795548; font-weight: 600; margin-bottom: 5px;">${partTitle}</div>
+                        <div style="font-size: 18px; color: #8d6e63; margin-bottom: 15px;">${new Date().getFullYear()}年 | 第${partIndex + 1}/4部分</div>
+                        <hr style="border: none; border-top: 2px solid #8b7355; margin: 0; width: 100%;">
+                    </div>
+                    <div style="height: ${contentHeight}px; overflow: hidden; position: relative;">
+                `;
+                
+                // 构建10个部分
+                for (let i = 0; i < 10; i++) {
+                    const questionNumber = partIndex * 10 + i + 1;
+                    const question = questionsSubset[i];
+                    const answer = answersSubset[i] || "（未回答）";
+                    
+                    // 计算这个部分顶部的位置
+                    const sectionTop = i * sectionHeight;
+                    
+                    // 计算答案的最佳字体大小
+                    const answerFontSize = calculateOptimalFontSize(
+                        answer, 
+                        answerRowHeight - 20,
+                        contentWidth - 55,
+                        22,
+                        10
+                    );
+                    
+                    // 问题文本起始位置
+                    const questionStartPosition = 55;
+                    
+                    contentHTML += `
+                        <div style="position: absolute; top: ${sectionTop}px; left: 0; right: 0; height: ${sectionHeight}px;">
+                            <div style="height: ${questionRowHeight}px; display: flex; align-items: center; padding: 5px 0;">
+                                <div style="flex-shrink: 0; margin-right: 15px;">
+                                    <span style="background-color: #8b7355; color: white; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">${questionNumber}</span>
+                                </div>
+                                <div style="flex-grow: 1; padding-left: 0; margin-left: 0;">
+                                    <div style="font-size: 20px; color: #5d4037; font-weight: bold; line-height: 1.3; padding-left: 0; margin-left: 0;">${question}</div>
+                                </div>
+                            </div>
+                            
+                            <div style="height: ${answerRowHeight}px; padding: 5px 0 10px ${questionStartPosition}px; overflow: hidden;">
+                                <div style="font-size: ${answerFontSize}px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word; height: 100%; overflow: hidden;">
+                                    ${answer}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                contentHTML += `</div>`;
+                
+                // 构建页脚
+                contentHTML += `
+                    <hr style="border: none; border-top: 1px solid #8b7355; margin: 20px 0 15px; width: 100%;">
+                    <div style="height: ${footerHeight - 40}px; text-align: center; color: #795548; font-size: 16px; padding-top: 10px;">
+                        <div style="margin-bottom: 5px;">© ${new Date().getFullYear()} 年度回顾反思</div>
+                        <div>生成时间: ${new Date().toLocaleDateString('zh-CN')} ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                `;
+                
+                tempContainer.innerHTML = contentHTML;
+                
+                // 给时间让内容渲染
+                setTimeout(() => {
+                    // 根据设备类型调整scale
+                    const scale = isMobileDevice() ? 1 : 2;
+                    
+                    // 设置html2canvas参数
+                    const options = {
+                        scale: scale,
+                        backgroundColor: '#fffefc',
+                        useCORS: true,
+                        logging: false,
+                        width: width,
+                        height: height,
+                        windowWidth: width,
+                        windowHeight: height,
+                        allowTaint: true,
+                        onclone: function(clonedDoc) {
+                            const style = clonedDoc.createElement('style');
+                            style.textContent = `
+                                @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+                                * { -webkit-font-smoothing: antialiased; }
+                            `;
+                            clonedDoc.head.appendChild(style);
+                        }
+                    };
+                    
+                    html2canvas(tempContainer, options).then(canvas => {
+                        // 确保画布尺寸正确
+                        if (canvas.width !== width * scale || canvas.height !== height * scale) {
+                            const finalCanvas = document.createElement('canvas');
+                            finalCanvas.width = width * scale;
+                            finalCanvas.height = height * scale;
+                            const ctx = finalCanvas.getContext('2d');
+                            ctx.drawImage(canvas, 0, 0, width * scale, height * scale);
+                            
+                            // 生成JPG格式图片，质量为0.9
+                            const imageDataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
+                            resolve(imageDataUrl);
+                        } else {
+                            // 生成JPG格式图片，质量为0.9
+                            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                            resolve(imageDataUrl);
+                        }
+                        
+                        document.body.removeChild(tempContainer);
+                    }).catch(error => {
+                        console.error('生成图片时出错:', error);
+                        document.body.removeChild(tempContainer);
+                        reject(error);
+                    });
+                }, 100);
+            });
+        }
+
+        // 生成图片
+        async function generateImages() {
+            // 先尝试提交数据到Google Sheets
+            if (!hasAutoSubmitted) {
+                showNotification('正在提交数据到云端...', 'info');
+                const result = await saveToGoogleSheets();
+                
+                if (!result.success) {
+                    const proceed = confirm(`数据提交失败: ${result.message}\n是否继续生成图片？`);
+                    if (!proceed) {
+                        return;
+                    }
+                } else {
+                    hasAutoSubmitted = true;
+                }
+            }
+            
+            const hasLongAnswer = currentUser.answers.some(answer => answer && answer.length > 800);
+            if (hasLongAnswer) {
+                if (!confirm('检测到部分答案较长，系统将自动调整字体大小以确保所有内容都能放入图片中。是否继续生成图片？')) {
+                    return;
+                }
+            }
+            
+            // 显示生成图片中的通知
+            showLoading('正在生成年度图片，这可能需要一些时间，请耐心等待...');
+            
+            try {
+                // 清空之前的图片数据
+                generatedImages = [];
+                
+                const partTitles = [
+                    "第一部分: 成长与经历",
+                    "第二部分: 反思与感悟", 
+                    "第三部分: 个人与社交",
+                    "第四部分: 文化与生活"
+                ];
+                
+                // 生成所有图片
+                for (let partIndex = 0; partIndex < 4; partIndex++) {
+                    const startIdx = partIndex * 10;
+                    const endIdx = startIdx + 10;
+                    const partQuestions = questions.slice(startIdx, endIdx);
+                    const partAnswers = currentUser.answers.slice(startIdx, endIdx);
+                    
+                    try {
+                        loadingText.textContent = `正在生成第${partIndex + 1}/4部分...`;
+                        const imageDataUrl = await generateSingleImage(partIndex, partTitles[partIndex], partQuestions, partAnswers);
+                        generatedImages.push({
+                            index: partIndex,
+                            title: partTitles[partIndex],
+                            dataUrl: imageDataUrl,
+                            filename: `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`
+                        });
+                        
+                        // 每张图片生成后稍微延迟，避免内存问题
+                        await new Promise(resolve => setTimeout(resolve, isMobileDevice() ? 800 : 500));
+                    } catch (error) {
+                        console.error(`第${partIndex + 1}部分生成失败:`, error);
+                        continue;
+                    }
+                }
+                
+                hideLoading();
+                
+                // 显示预览
+                if (generatedImages.length > 0) {
+                    showPreview();
+                    showNotification('年度图片生成完成！', 'success');
+                } else {
+                    showNotification('图片生成失败，请重试', 'error');
+                }
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('生成图片时出错: ' + error.message, 'error');
+            }
+        }
+
+        // 显示预览
+        function showPreview() {
+            previewContainer.style.display = 'block';
+            previewParts.innerHTML = '';
+            
+            if (generatedImages.length === 0) {
+                previewParts.innerHTML = '<p style="text-align: center; padding: 20px; color: #795548;">图片生成失败，请重试。</p>';
+                return;
+            }
+            
+            generatedImages.forEach((image, index) => {
+                const partElement = document.createElement('div');
+                partElement.className = 'preview-part';
+                partElement.id = `previewPart${index}`;
+                
+                const partHasLongAnswer = currentUser.answers.slice(index * 10, (index + 1) * 10)
+                    .some(answer => answer && answer.length > 800);
+                
+                let previewHTML = '';
+                const partQuestions = questions.slice(index * 10, (index + 1) * 10);
+                const partAnswers = currentUser.answers.slice(index * 10, (index + 1) * 10);
+                
+                partQuestions.forEach((question, qIndex) => {
+                    const questionNumber = index * 10 + qIndex + 1;
+                    const answer = partAnswers[qIndex] || "（未回答）";
+                    const answerPreview = answer.length > 60 ? answer.substring(0, 60) + '...' : answer;
+                    previewHTML += `<div style="margin-bottom: 10px;">
+                        <div style="font-weight: bold; color: #5d4037; font-family: 'Noto Sans SC', sans-serif;">${questionNumber}. ${question}</div>
+                        <div style="padding-left: 20px; color: #3e2723; font-family: 'Ma Shan Zheng', cursive;">${answerPreview}</div>
+                    </div>`;
+                });
+                
+                partElement.innerHTML = `
+                    <div class="part-header">${image.title}${partHasLongAnswer ? ' (含长答案)' : ''}</div>
+                    <div class="part-content">${previewHTML}</div>
+                    <div class="part-footer">
+                        <button class="view-image-btn btn-primary" data-index="${index}">
+                            <i class="fas fa-eye"></i> 查看图片
+                        </button>
+                        <button class="download-single-btn btn-success" data-index="${index}">
+                            <i class="fas fa-download"></i> 下载图片
+                        </button>
+                    </div>
+                `;
+                
+                previewParts.appendChild(partElement);
+                
+                // 添加查看图片事件
+                const viewBtn = partElement.querySelector('.view-image-btn');
+                viewBtn.addEventListener('click', () => {
+                    showImagePreview(image.dataUrl, index);
+                });
+                
+                // 添加下载图片事件
+                const downloadBtn = partElement.querySelector('.download-single-btn');
+                downloadBtn.addEventListener('click', () => {
+                    const success = downloadImage(image.dataUrl, image.filename);
+                    if (!success && isMobileDevice()) {
+                        // 如果移动端直接下载失败，显示预览
+                        showImagePreview(image.dataUrl, index);
+                    }
+                });
+            });
+            
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 下载所有图片
+        async function downloadAllImages() {
+            if (generatedImages.length === 0) {
+                showNotification('请先生成图片', 'warning');
+                return;
+            }
+            
+            // 移动端特殊处理
+            if (isMobileDevice()) {
+                const confirmDownload = confirm('手机端下载多张图片可能不太方便。建议逐张下载或查看图片后长按保存。是否继续尝试下载？');
+                if (!confirmDownload) {
+                    return;
+                }
+            }
+            
+            showLoading('正在下载图片...');
+            let successCount = 0;
+            
+            // 逐张下载图片
+            for (let i = 0; i < generatedImages.length; i++) {
+                const image = generatedImages[i];
+                const success = downloadImage(image.dataUrl, image.filename);
+                
+                if (success) {
+                    successCount++;
+                }
+                
+                // 每张图片下载间隔1秒，避免浏览器限制
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            hideLoading();
+            
+            if (successCount > 0) {
+                showNotification(`成功下载${successCount}张图片`, 'success');
+            }
+            
+            if (successCount < generatedImages.length && isMobileDevice()) {
+                showNotification('部分图片下载失败，建议查看图片后长按保存', 'warning');
+            }
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            prevBtn.addEventListener('click', () => {
+                if (currentUser.currentQuestionIndex > 0) {
+                    currentUser.currentQuestionIndex--;
+                    updateQuestionDisplay();
+                    updateCompletionDots();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentUser.currentQuestionIndex < questions.length - 1) {
+                    currentUser.currentQuestionIndex++;
+                    updateQuestionDisplay();
+                    updateCompletionDots();
+                }
+            });
+
+            saveBtn.addEventListener('click', saveAnswer);
+
+            startBtn.addEventListener('click', startAnswering);
+            
+            clearLocalBtn.addEventListener('click', clearLocalAnswers);
+
+            userNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    startAnswering();
+                }
+            });
+
+            generateImageBtn.addEventListener('click', generateImages);
+
+            downloadAllBtn.addEventListener('click', downloadAllImages);
+            
+            // 图片预览相关事件
+            imagePreviewClose.addEventListener('click', closeImagePreview);
+            imagePreviewDownload.addEventListener('click', () => {
+                const partIndex = parseInt(previewImage.dataset.part);
+                const image = generatedImages[partIndex];
+                if (image) {
+                    const success = downloadImage(image.dataUrl, image.filename);
+                    if (!success && isMobileDevice()) {
+                        showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
+                    }
+                }
+            });
+            
+            // 点击图片预览背景关闭
+            imagePreview.addEventListener('click', (e) => {
+                if (e.target === imagePreview) {
+                    closeImagePreview();
+                }
+            });
+            
+            answerInput.addEventListener('blur', saveAnswer);
+            
+            answerInput.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    saveAnswer();
+                }
+            });
+        }
+
+        // 初始化应用
+        function initApp() {
+            initQuestionsList();
+            initCompletionDots();
+            initEventListeners();
+            loadUserProgress();
+            
+            if (localStorage.getItem('currentUserProgress')) {
+                startBtn.disabled = true;
+                userNameInput.disabled = true;
+            }
+        }
+
+        // 当页面加载完成时初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
