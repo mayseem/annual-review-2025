@@ -75,6 +75,11 @@
             margin-bottom: 8px;
         }
         
+        .instructions ul {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        
         .app-container {
             display: flex;
             flex-direction: column;
@@ -122,6 +127,8 @@
             max-height: 400px;
             overflow-y: auto;
             padding-right: 10px;
+            -webkit-overflow-scrolling: touch;
+            overflow-scrolling: touch;
         }
         
         .question-item {
@@ -133,6 +140,9 @@
             transition: all 0.3s ease;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+            min-width: 44px;
+            touch-action: manipulation;
         }
         
         .question-item:hover {
@@ -216,6 +226,7 @@
             -moz-user-select: text;
             -ms-user-select: text;
             user-select: text;
+            -webkit-touch-callout: default;
         }
         
         .navigation-buttons {
@@ -244,7 +255,8 @@
             transition: background-color 0.3s;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            min-height: 44px; /* 移动端最小触摸区域 */
+            min-height: 44px;
+            min-width: 44px;
         }
         
         button:hover {
@@ -391,6 +403,8 @@
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            min-height: 44px;
+            min-width: 44px;
         }
         
         .completion-dot.answered {
@@ -493,6 +507,8 @@
             max-height: 300px;
             overflow-y: auto;
             white-space: pre-line;
+            -webkit-overflow-scrolling: touch;
+            overflow-scrolling: touch;
         }
         
         .part-footer {
@@ -599,6 +615,39 @@
             margin-bottom: 20px;
         }
         
+        /* 移动端加载动画 */
+        .mobile-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 18px;
+            display: none;
+        }
+        
+        .mobile-loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #fff;
+            border-top: 5px solid #8b7355;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         /* 移动端优化 */
         @media (max-width: 767px) {
             .navigation-buttons button {
@@ -635,11 +684,11 @@
             
             textarea {
                 padding: 12px;
-                font-size: 16px; /* 防止iOS自动缩放 */
+                font-size: 16px;
             }
             
             button, input, textarea {
-                font-size: 16px; /* 防止iOS自动缩放 */
+                font-size: 16px;
             }
         }
         
@@ -652,6 +701,13 @@
     </style>
 </head>
 <body>
+    <!-- 移动端加载动画 -->
+    <div class="mobile-loading" id="mobileLoading">
+        <div class="mobile-loading-spinner"></div>
+        <div id="mobileLoadingText">正在生成图片，请稍候...</div>
+        <div style="font-size: 14px; margin-top: 10px;">这可能需要30-60秒</div>
+    </div>
+    
     <!-- 通知区域 -->
     <div id="notification" class="notification"></div>
     
@@ -680,8 +736,15 @@
                 <li>填写你的姓名或昵称，开始回答问题</li>
                 <li>点击左侧的问题，或使用"上一题"/"下一题"按钮浏览所有40个问题</li>
                 <li>在每个问题下方的文本框中写下你的答案</li>
-                <li>完成所有问题后，系统会自动提交答案，然后显示"生成年度图片"按钮</li>
-                <li><strong>手机用户：</strong>生成图片后，可以点击预览中的"查看图片"按钮，然后长按图片保存</li>
+                <li><strong>手机用户注意：</strong>
+                    <ul>
+                        <li>建议在Wi-Fi环境下使用</li>
+                        <li>填写完成后点击"生成年度图片"按钮</li>
+                        <li>生成图片可能需要30-60秒，请耐心等待</li>
+                        <li>生成完成后，点击"查看图片"按钮，然后长按图片保存到相册</li>
+                        <li>如果遇到问题，请尝试使用手机自带浏览器（如Safari、Chrome）</li>
+                    </ul>
+                </li>
             </ol>
         </div>
         
@@ -850,6 +913,10 @@
         const imagePreviewDownload = document.getElementById('imagePreviewDownload');
         const imagePreviewLoading = document.getElementById('imagePreviewLoading');
         const previewInstruction = document.getElementById('previewInstruction');
+        
+        // 移动端加载元素
+        const mobileLoading = document.getElementById('mobileLoading');
+        const mobileLoadingText = document.getElementById('mobileLoadingText');
 
         // 显示通知
         function showNotification(message, type = 'success', duration = 3000) {
@@ -867,6 +934,11 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
+        // 检测是否为微信浏览器
+        function isWechatBrowser() {
+            return /MicroMessenger/i.test(navigator.userAgent);
+        }
+
         // 生成用户ID（如果不存在）
         function getOrCreateUserId() {
             let userId = localStorage.getItem('annualReviewUserId');
@@ -878,58 +950,143 @@
             return userId;
         }
 
-       async function saveToGoogleSheets() {
-  try {
-    const userId = getOrCreateUserId();
-    const name = currentUser.name;
-    const answers = currentUser.answers;
-    const generateTime = new Date().toISOString();
-    
-    // 检查是否有答案
-    const answeredQuestions = answers.filter(answer => answer && answer.trim() !== '');
-    if (answeredQuestions.length === 0) {
-      return { success: false, message: '没有答案可保存' };
-    }
-    
-    showNotification('正在保存答案...', 'warning');
-    
-    // 准备数据 - 使用FormData格式
-    const formData = new URLSearchParams();
-    formData.append('user_id', userId);
-    formData.append('name', name);
-    formData.append('answers', JSON.stringify(answers));
-    formData.append('generate_time', generateTime);
-    
-    // 发送POST请求
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData.toString(),
-      mode: 'no-cors'  // 添加no-cors模式避免CORS问题
-    });
-    
-    // 由于使用了no-cors，我们无法读取响应内容
-    // 但请求会被发送
-    console.log('数据已发送到Google表格');
-    
-    // 模拟成功响应
-    return { 
-      success: true, 
-      message: '答案保存成功',
-      completed_count: answeredQuestions.length
-    };
-    
-  } catch (error) {
-    console.error('保存失败:', error);
-    // 即使失败也继续，不影响用户体验
-    return { 
-      success: true, // 这里返回true，让用户可以继续生成图片
-      message: '数据可能未保存到云端，但不影响本地使用'
-    };
-  }
-}
+        // 移动端浏览器兼容性检查
+        function checkMobileCompatibility() {
+            const ua = navigator.userAgent;
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            const isAndroid = /Android/i.test(ua);
+            const isWechat = isWechatBrowser();
+            
+            // 检查是否支持localStorage
+            if (typeof localStorage === 'undefined') {
+                showNotification('您的浏览器不支持本地存储功能，部分功能可能无法使用', 'error', 8000);
+                return false;
+            }
+            
+            // 针对微信浏览器进行特殊处理
+            if (isWechat) {
+                showNotification('微信浏览器可能存在兼容性问题，建议使用手机自带浏览器打开', 'warning', 8000);
+            }
+            
+            return true;
+        }
+
+        // 显示移动端加载动画
+        function showMobileLoading(message = '正在生成图片，请稍候...') {
+            if (isMobileDevice()) {
+                mobileLoadingText.textContent = message;
+                mobileLoading.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // 隐藏移动端加载动画
+        function hideMobileLoading() {
+            mobileLoading.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 保存到Google表格（优化移动端版本）
+        async function saveToGoogleSheets() {
+            try {
+                const userId = getOrCreateUserId();
+                const name = currentUser.name;
+                const answers = currentUser.answers;
+                const generateTime = new Date().toISOString();
+                
+                // 检查是否有答案
+                const answeredQuestions = answers.filter(answer => answer && answer.trim() !== '');
+                if (answeredQuestions.length === 0) {
+                    return { success: false, message: '没有答案可保存' };
+                }
+                
+                // 显示保存提示
+                showNotification('正在保存答案到云端...', 'warning', 3000);
+                
+                // 准备数据
+                const data = {
+                    user_id: userId,
+                    name: name,
+                    answers: answers,
+                    generate_time: generateTime,
+                    completed_count: answeredQuestions.length,
+                    device_type: isMobileDevice() ? 'mobile' : 'desktop'
+                };
+                
+                // 方法1：使用FormData（兼容性较好）
+                const formData = new FormData();
+                formData.append('data', JSON.stringify(data));
+                
+                // 为移动端添加超时设置
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                try {
+                    // 尝试使用fetch提交
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors',
+                        signal: controller.signal,
+                        headers: {
+                            'Accept': 'application/json',
+                        }
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    // 由于使用了no-cors，我们无法读取响应内容
+                    console.log('数据已发送到Google表格（no-cors模式）');
+                    
+                    return { 
+                        success: true, 
+                        message: '答案已保存',
+                        completed_count: answeredQuestions.length
+                    };
+                    
+                } catch (fetchError) {
+                    // 如果fetch失败，尝试使用其他方法
+                    clearTimeout(timeoutId);
+                    
+                    // 方法2：使用图片ping（适用于移动端）
+                    console.log('尝试使用备选方案保存数据...');
+                    try {
+                        // 创建一个简单的GET请求（数据可能会被截断）
+                        const encodedData = encodeURIComponent(JSON.stringify({
+                            uid: userId,
+                            n: name.substring(0, 20),
+                            c: answeredQuestions.length
+                        }));
+                        
+                        const img = new Image();
+                        img.src = `${GOOGLE_SCRIPT_URL}?data=${encodedData}&t=${Date.now()}`;
+                        
+                        return { 
+                            success: true, 
+                            message: '数据可能已保存（备选方案）',
+                            completed_count: answeredQuestions.length
+                        };
+                    } catch (imgError) {
+                        console.error('备选方案也失败:', imgError);
+                        // 即使失败，也返回成功，不影响用户体验
+                        return { 
+                            success: true, 
+                            message: '数据保存失败，但不影响本地使用',
+                            completed_count: answeredQuestions.length
+                        };
+                    }
+                }
+                
+            } catch (error) {
+                console.error('保存失败:', error);
+                // 即使失败也继续，不影响用户体验
+                return { 
+                    success: true, // 这里返回true，让用户可以继续生成图片
+                    message: '数据可能未保存到云端，但不影响本地使用',
+                    completed_count: 0
+                };
+            }
+        }
 
         // 初始化完成状态圆点
         function initCompletionDots() {
@@ -1162,9 +1319,11 @@
             // 对于移动设备，使用新窗口打开
             if (isMobileDevice()) {
                 const newWindow = window.open();
-                newWindow.document.write(`<img src="${imageDataUrl}" style="max-width:100%;"/>`);
-                newWindow.document.close();
-                showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
+                if (newWindow) {
+                    newWindow.document.write(`<img src="${imageDataUrl}" style="max-width:100%;"/>`);
+                    newWindow.document.close();
+                    showNotification('请在图片上长按并选择"保存图片"', 'warning', 5000);
+                }
                 return false;
             }
             
@@ -1232,9 +1391,10 @@
         // 生成单张图片 - 答案与题目中的第一个字对齐
         function generateSingleImage(partIndex, partTitle, questionsSubset, answersSubset) {
             return new Promise((resolve, reject) => {
-                // 固定图片尺寸
-                const width = 1080;
-                const height = 1920;
+                // 根据设备类型调整图片尺寸
+                const isMobile = isMobileDevice();
+                const width = isMobile ? 800 : 1080;
+                const height = isMobile ? 1200 : 1920;
                 
                 // 边距设置
                 const paddingTop = 40;
@@ -1364,18 +1524,28 @@
                         windowWidth: width,
                         windowHeight: height,
                         allowTaint: true,
+                        imageTimeout: isMobile ? 30000 : 15000,
+                        removeContainer: true,
                         useCORS: true,
                         onclone: function(clonedDoc) {
                             const style = clonedDoc.createElement('style');
                             style.textContent = `
                                 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
-                                * { -webkit-font-smoothing: antialiased; }
+                                * { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
                             `;
                             clonedDoc.head.appendChild(style);
                         }
                     };
                     
-                    html2canvas(tempContainer, options).then(canvas => {
+                    // 使用Promise.race添加超时机制
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('生成图片超时，请重试')), isMobile ? 45000 : 30000);
+                    });
+                    
+                    Promise.race([
+                        html2canvas(tempContainer, options),
+                        timeoutPromise
+                    ]).then(canvas => {
                         // 确保画布尺寸正确
                         if (canvas.width !== width * scale || canvas.height !== height * scale) {
                             const finalCanvas = document.createElement('canvas');
@@ -1412,17 +1582,29 @@
                 }
             }
             
-            // 显示生成图片中的通知
-            showNotification('正在生成年度图片，请稍候...', 'warning', 5000);
+            // 显示生成图片中的通知 - 移动端显示更详细的提示
+            const isMobile = isMobileDevice();
+            const generatingMsg = isMobile ? 
+                '正在生成年度图片，手机端可能需要30-60秒，请勿关闭页面...' : 
+                '正在生成年度图片，请稍候...';
+            
+            showNotification(generatingMsg, 'warning', 8000);
+            
+            // 禁用按钮防止重复点击
+            generateImageBtn.disabled = true;
+            generateImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
+            
+            // 显示移动端加载动画
+            showMobileLoading('正在生成年度图片，请耐心等待...');
             
             try {
                 // 先保存数据到Google表格
+                showNotification('正在保存答案到云端...', 'warning', 3000);
                 const saveResult = await saveToGoogleSheets();
                 
-                // 如果保存失败，阻止图片生成
+                // 如果保存失败，给出提示但不阻止图片生成
                 if (!saveResult.success) {
-                    showNotification('无法生成图片：数据保存失败', 'error');
-                    return;
+                    showNotification('云端保存失败，但继续生成本地图片', 'warning');
                 }
                 
                 // 清空之前的图片数据
@@ -1435,7 +1617,10 @@
                     "第四部分: 文化与生活"
                 ];
                 
-                // 生成所有图片
+                // 为移动端添加延迟，避免内存问题
+                const delay = isMobile ? 1000 : 500;
+                
+                // 使用for循环而不是forEach，以便更好地控制流程
                 for (let partIndex = 0; partIndex < 4; partIndex++) {
                     const startIdx = partIndex * 10;
                     const endIdx = startIdx + 10;
@@ -1443,7 +1628,11 @@
                     const partAnswers = currentUser.answers.slice(startIdx, endIdx);
                     
                     try {
-                        showNotification(`正在生成第${partIndex + 1}/4部分...`, 'warning', 2000);
+                        // 更新进度提示
+                        const progressMsg = `正在生成第${partIndex + 1}/4部分 (${Math.round((partIndex + 1) / 4 * 100)}%)`;
+                        showMobileLoading(progressMsg);
+                        showNotification(progressMsg, 'warning', 2000);
+                        
                         const imageDataUrl = await generateSingleImage(partIndex, partTitles[partIndex], partQuestions, partAnswers);
                         generatedImages.push({
                             index: partIndex,
@@ -1452,10 +1641,12 @@
                             filename: `${currentUser.name}_年度回顾_第${partIndex + 1}部分.jpg`
                         });
                         
-                        // 每张图片生成后稍微延迟，避免内存问题
-                        await new Promise(resolve => setTimeout(resolve, isMobileDevice() ? 800 : 500));
+                        // 每张图片生成后延迟，避免内存问题
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        
                     } catch (error) {
-                        showNotification(`第${partIndex + 1}部分生成失败: ${error.message}`, 'error');
+                        console.error(`第${partIndex + 1}部分生成失败:`, error);
+                        showNotification(`第${partIndex + 1}部分生成失败: ${error.message}`, 'error', 5000);
                         continue;
                     }
                 }
@@ -1465,6 +1656,13 @@
                 
             } catch (error) {
                 showNotification('生成图片时出错: ' + error.message, 'error');
+            } finally {
+                // 重新启用按钮
+                generateImageBtn.disabled = false;
+                generateImageBtn.innerHTML = '<i class="fas fa-image"></i> 生成年度图片';
+                
+                // 隐藏移动端加载动画
+                hideMobileLoading();
             }
         }
 
@@ -1674,6 +1872,13 @@
 
         // 初始化应用
         function initApp() {
+            // 检查浏览器兼容性
+            if (!checkMobileCompatibility()) {
+                // 如果兼容性有问题，禁用部分功能
+                generateImageBtn.disabled = true;
+                generateImageBtn.textContent = '浏览器不兼容';
+            }
+            
             initQuestionsList();
             initCompletionDots();
             initEventListeners();
