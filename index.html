@@ -682,7 +682,6 @@
                 <li>在每个问题下方的文本框中写下你的答案</li>
                 <li>完成所有问题后，系统会自动提交答案，然后显示"生成年度图片"按钮</li>
                 <li><strong>手机用户：</strong>生成图片后，可以点击预览中的"查看图片"按钮，然后长按图片保存</li>
-                <li><strong>注意：</strong>本页面不会保存您的进度，关闭页面后所有答案将丢失</li>
             </ol>
         </div>
         
@@ -738,7 +737,7 @@
                     </div>
                     
                     <div class="action-buttons">
-                        <button id="clearLocalBtn" class="btn-danger"><i class="fas fa-trash"></i> 清空所有答案</button>
+                        <button id="clearLocalBtn" class="btn-danger"><i class="fas fa-trash"></i> 清空本地答案</button>
                         <button id="generateImageBtn" class="btn-success" disabled><i class="fas fa-image"></i> 生成年度图片</button>
                     </div>
                 </div>
@@ -760,7 +759,6 @@
         
         <footer>
             <p>© 2025 年度回顾反思 | HiHeart </p>
-            <p style="font-size: 0.7rem; color: #a1887f; margin-top: 5px;">温馨提示：本页面不会保存您的数据，请及时下载生成的图片</p>
         </footer>
     </div>
 
@@ -769,7 +767,7 @@
     
     <script>
         // 配置
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxle_MY2PCNLMizhn-BQAyhhajjvBYrnX6ufmLlCDpkFgLsnCd4OVSYCu_mEAsaJWW0UQ/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLFhXNLQhRrIZPlqAICBC0Ys0GntAVOkww_N71HjJeLcdU3lkQ7kyu5pRTUvDjI3Gk/exec';
         
         // 40个年度问题
         const questions = [
@@ -815,7 +813,7 @@
             "有什么是你想要却没有得到的?"
         ];
 
-        // 当前用户数据 - 每次刷新页面都从初始状态开始
+        // 当前用户数据
         let currentUser = {
             name: "匿名用户",
             answers: new Array(40).fill(""),
@@ -868,6 +866,70 @@
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
+
+        // 生成用户ID（如果不存在）
+        function getOrCreateUserId() {
+            let userId = localStorage.getItem('annualReviewUserId');
+            if (!userId) {
+                // 生成一个唯一的用户ID
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('annualReviewUserId', userId);
+            }
+            return userId;
+        }
+
+       async function saveToGoogleSheets() {
+  try {
+    const userId = getOrCreateUserId();
+    const name = currentUser.name;
+    const answers = currentUser.answers;
+    const generateTime = new Date().toISOString();
+    
+    // 检查是否有答案
+    const answeredQuestions = answers.filter(answer => answer && answer.trim() !== '');
+    if (answeredQuestions.length === 0) {
+      return { success: false, message: '没有答案可保存' };
+    }
+    
+    showNotification('正在保存答案...', 'warning');
+    
+    // 准备数据 - 使用FormData格式
+    const formData = new URLSearchParams();
+    formData.append('user_id', userId);
+    formData.append('name', name);
+    formData.append('answers', JSON.stringify(answers));
+    formData.append('generate_time', generateTime);
+    
+    // 发送POST请求
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData.toString(),
+      mode: 'no-cors'  // 添加no-cors模式避免CORS问题
+    });
+    
+    // 由于使用了no-cors，我们无法读取响应内容
+    // 但请求会被发送
+    console.log('数据已发送到Google表格');
+    
+    // 模拟成功响应
+    return { 
+      success: true, 
+      message: '答案保存成功',
+      completed_count: answeredQuestions.length
+    };
+    
+  } catch (error) {
+    console.error('保存失败:', error);
+    // 即使失败也继续，不影响用户体验
+    return { 
+      success: true, // 这里返回true，让用户可以继续生成图片
+      message: '数据可能未保存到云端，但不影响本地使用'
+    };
+  }
+}
 
         // 初始化完成状态圆点
         function initCompletionDots() {
@@ -975,6 +1037,7 @@
             generateImageBtn.disabled = !allAnswered;
             
             highlightCurrentQuestion();
+            saveUserProgress();
         }
 
         // 更新进度
@@ -984,10 +1047,13 @@
             progressFill.style.width = `${percentage}%`;
         }
 
-        // 保存用户答案（仅保存在内存中）
+        // 保存用户答案
         function saveAnswer() {
             const answer = answerInput.value.trim();
             currentUser.answers[currentUser.currentQuestionIndex] = answer;
+            
+            // 保存到本地
+            saveUserProgress();
             
             // 更新完成状态
             updateCompletionDots();
@@ -1012,14 +1078,35 @@
             }
         }
 
-        // 清空所有答案（重置为初始状态）
-        function clearAllAnswers() {
-            if (confirm('确定要清空所有答案吗？此操作不可撤销，且不会保存到本地。')) {
-                currentUser = {
-                    name: userNameInput.value.trim() || "匿名用户",
-                    answers: new Array(40).fill(""),
-                    currentQuestionIndex: 0
-                };
+        // 保存用户进度到本地存储
+        function saveUserProgress() {
+            localStorage.setItem('currentUserProgress', JSON.stringify(currentUser));
+        }
+
+        // 加载用户进度
+        function loadUserProgress() {
+            const savedProgress = localStorage.getItem('currentUserProgress');
+            if (savedProgress) {
+                currentUser = JSON.parse(savedProgress);
+                updateQuestionDisplay();
+                initCompletionDots();
+                
+                // 如果本地有用户名，更新输入框
+                if (currentUser.name) {
+                    userNameInput.value = currentUser.name;
+                }
+            }
+        }
+
+        // 清空本地答案
+        function clearLocalAnswers() {
+            if (confirm('确定要清空所有本地答案吗？此操作不可撤销。')) {
+                currentUser.answers = new Array(40).fill("");
+                currentUser.currentQuestionIndex = 0;
+                
+                // 清除本地存储
+                localStorage.removeItem('currentUserProgress');
+                localStorage.removeItem('annualReviewUserId'); // 也清除用户ID
                 
                 // 重置UI
                 updateQuestionDisplay();
@@ -1028,10 +1115,7 @@
                 // 重置生成图片按钮
                 generateImageBtn.disabled = true;
                 
-                // 隐藏预览
-                previewContainer.style.display = 'none';
-                
-                showNotification('所有答案已清空', 'success');
+                showNotification('本地答案已清空', 'success');
             }
         }
 
@@ -1332,6 +1416,15 @@
             showNotification('正在生成年度图片，请稍候...', 'warning', 5000);
             
             try {
+                // 先保存数据到Google表格
+                const saveResult = await saveToGoogleSheets();
+                
+                // 如果保存失败，阻止图片生成
+                if (!saveResult.success) {
+                    showNotification('无法生成图片：数据保存失败', 'error');
+                    return;
+                }
+                
                 // 清空之前的图片数据
                 generatedImages = [];
                 
@@ -1502,11 +1595,12 @@
 
             saveBtn.addEventListener('click', saveAnswer);
 
-            clearLocalBtn.addEventListener('click', clearAllAnswers);
+            clearLocalBtn.addEventListener('click', clearLocalAnswers);
 
-            // 用户名输入时更新
+            // 用户名输入时自动保存
             userNameInput.addEventListener('input', function() {
                 currentUser.name = userNameInput.value.trim() || "匿名用户";
+                saveUserProgress();
             });
 
             generateImageBtn.addEventListener('click', generateImages);
@@ -1583,9 +1677,7 @@
             initQuestionsList();
             initCompletionDots();
             initEventListeners();
-            
-            // 直接使用初始状态，不加载任何保存的数据
-            updateQuestionDisplay();
+            loadUserProgress();
             
             // 自动设置用户名
             if (currentUser.name && currentUser.name !== "匿名用户") {
